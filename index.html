@@ -3,24 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mina projekt</title>
-  <meta name="description" content="En modern och enkel projektsida för GitHub Pages." />
+  <title>Patrik — Hobbyutvecklare</title>
+  <meta name="description" content="En enkel och minimalistisk sida för små projekt på fritiden." />
   <style>
     :root {
-      --bg: #0b1020;
-      --bg-soft: rgba(255,255,255,0.06);
-      --card: rgba(255,255,255,0.08);
-      --card-border: rgba(255,255,255,0.12);
-      --text: #edf2ff;
-      --muted: #a9b4d0;
-      --accent: #7c9cff;
-      --accent-2: #54d2b1;
-      --shadow: 0 20px 50px rgba(0,0,0,0.28);
-      --radius: 24px;
-      --maxw: 1120px;
+      --bg: #f7f8fb;
+      --surface: #ffffff;
+      --border: #e7ebf2;
+      --text: #1b2230;
+      --muted: #667085;
+      --accent: #4f6ef7;
+      --maxw: 860px;
+      --radius: 16px;
+      --shadow: 0 8px 24px rgba(16, 24, 40, 0.05);
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     html {
       scroll-behavior: smooth;
@@ -29,12 +29,9 @@
     body {
       margin: 0;
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
       color: var(--text);
-      background:
-        radial-gradient(circle at top left, rgba(124, 156, 255, 0.24), transparent 28%),
-        radial-gradient(circle at top right, rgba(84, 210, 177, 0.18), transparent 24%),
-        linear-gradient(180deg, #0b1020 0%, #11172b 100%);
-      min-height: 100vh;
+      line-height: 1.6;
     }
 
     .container {
@@ -45,28 +42,23 @@
     .topbar {
       position: sticky;
       top: 0;
-      z-index: 20;
-      backdrop-filter: blur(14px);
-      background: rgba(11, 16, 32, 0.55);
-      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: rgba(247, 248, 251, 0.88);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
     }
 
     .nav {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 1rem 0;
       gap: 1rem;
+      padding: 1rem 0;
     }
 
     .brand {
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      font-size: 1.05rem;
-    }
-
-    .brand span {
-      color: var(--accent);
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
     }
 
     .nav-links {
@@ -78,254 +70,174 @@
     .nav-links a {
       color: var(--muted);
       text-decoration: none;
-      font-size: 0.96rem;
-      transition: color 0.2s ease;
+      font-size: 0.95rem;
     }
 
-    .nav-links a:hover {
+    .nav-links a:hover,
+    .nav-links a:focus-visible {
       color: var(--text);
     }
 
+    main {
+      padding: 4.5rem 0 3rem;
+    }
+
     .hero {
-      padding: 5.5rem 0 3.5rem;
-      display: grid;
-      grid-template-columns: 1.25fr 0.9fr;
-      gap: 2rem;
-      align-items: center;
+      padding: 2rem 0 3rem;
+      border-bottom: 1px solid var(--border);
     }
 
     .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.45rem 0.8rem;
-      border-radius: 999px;
-      background: rgba(124, 156, 255, 0.12);
-      color: #dfe7ff;
-      border: 1px solid rgba(124, 156, 255, 0.25);
-      font-size: 0.9rem;
+      display: inline-block;
       margin-bottom: 1rem;
+      padding: 0.35rem 0.7rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 0.88rem;
     }
 
     h1 {
       margin: 0;
-      font-size: clamp(2.4rem, 5vw, 4.8rem);
-      line-height: 0.96;
-      letter-spacing: -0.06em;
-      max-width: 11ch;
+      font-size: clamp(2.2rem, 6vw, 4.2rem);
+      line-height: 1.02;
+      letter-spacing: -0.05em;
+      max-width: 10ch;
     }
 
-    .hero p {
+    .lead {
+      max-width: 60ch;
       margin: 1.2rem 0 0;
-      max-width: 62ch;
       color: var(--muted);
-      font-size: 1.08rem;
-      line-height: 1.7;
+      font-size: 1.05rem;
     }
 
     .hero-actions {
       display: flex;
+      gap: 0.8rem;
       flex-wrap: wrap;
-      gap: 0.9rem;
-      margin-top: 1.6rem;
+      margin-top: 1.5rem;
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 0.55rem;
-      padding: 0.95rem 1.2rem;
-      border-radius: 16px;
+      padding: 0.85rem 1rem;
+      border-radius: 12px;
       text-decoration: none;
-      font-weight: 700;
-      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, var(--accent), #9f7cff);
-      color: white;
-      box-shadow: 0 12px 32px rgba(124, 156, 255, 0.3);
-    }
-
-    .btn-secondary {
-      background: var(--bg-soft);
-      color: var(--text);
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-
-    .btn:hover {
-      transform: translateY(-2px);
-    }
-
-    .hero-card {
-      background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.05));
-      border: 1px solid var(--card-border);
-      border-radius: 28px;
-      padding: 1.3rem;
-      box-shadow: var(--shadow);
-    }
-
-    .hero-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-    }
-
-    .mini-panel {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 22px;
-      padding: 1rem;
-      min-height: 138px;
-    }
-
-    .mini-label {
-      color: var(--muted);
-      font-size: 0.85rem;
-      margin-bottom: 0.7rem;
-    }
-
-    .mini-value {
-      font-size: 1.45rem;
-      font-weight: 800;
-      letter-spacing: -0.04em;
+      background: var(--text);
+      color: #fff;
+      border-color: var(--text);
     }
 
     .section {
-      padding: 2.2rem 0;
+      padding: 2.5rem 0;
     }
 
     .section-header {
-      display: flex;
-      align-items: end;
-      justify-content: space-between;
-      gap: 1rem;
-      margin-bottom: 1.3rem;
+      margin-bottom: 1.2rem;
     }
 
     .section-header h2 {
-      margin: 0;
-      font-size: clamp(1.6rem, 2vw, 2.1rem);
-      letter-spacing: -0.04em;
+      margin: 0 0 0.4rem;
+      font-size: 1.55rem;
+      letter-spacing: -0.03em;
     }
 
     .section-header p {
       margin: 0;
       color: var(--muted);
-      max-width: 56ch;
+      max-width: 60ch;
     }
 
     .projects {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 1.2rem;
+      gap: 1rem;
+    }
+
+    .project-card,
+    .info-card,
+    .footer-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
     }
 
     .project-card {
-      position: relative;
-      overflow: hidden;
-      background: var(--card);
-      border: 1px solid var(--card-border);
-      border-radius: var(--radius);
-      padding: 1.3rem;
-      box-shadow: var(--shadow);
-      transition: transform 0.22s ease, border-color 0.22s ease;
+      padding: 1.2rem;
     }
 
-    .project-card:hover {
-      transform: translateY(-4px);
-      border-color: rgba(124, 156, 255, 0.35);
-    }
-
-    .project-glow {
-      position: absolute;
-      inset: auto auto -40px -30px;
-      width: 140px;
-      height: 140px;
-      background: radial-gradient(circle, rgba(124, 156, 255, 0.18), transparent 70%);
-      pointer-events: none;
-    }
-
-    .project-top {
+    .project-meta {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 0.75rem;
-      margin-bottom: 1rem;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
     }
 
-    .project-icon {
-      width: 52px;
-      height: 52px;
-      border-radius: 16px;
-      display: grid;
-      place-items: center;
-      font-size: 1.35rem;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-
-    .project-badge {
-      font-size: 0.78rem;
-      color: #dfe7ff;
-      background: rgba(84, 210, 177, 0.14);
-      border: 1px solid rgba(84, 210, 177, 0.22);
-      padding: 0.38rem 0.65rem;
-      border-radius: 999px;
-      white-space: nowrap;
+    .project-number {
+      color: var(--muted);
+      font-size: 0.88rem;
     }
 
     .project-card h3 {
       margin: 0;
-      font-size: 1.2rem;
-      letter-spacing: -0.03em;
+      font-size: 1.08rem;
+      letter-spacing: -0.02em;
     }
 
     .project-card p {
-      margin: 0.8rem 0 1rem;
+      margin: 0.75rem 0 0;
       color: var(--muted);
-      line-height: 1.65;
-      min-height: 112px;
     }
 
     .tags {
       display: flex;
+      gap: 0.5rem;
       flex-wrap: wrap;
-      gap: 0.55rem;
+      margin-top: 1rem;
     }
 
     .tag {
-      padding: 0.45rem 0.7rem;
+      display: inline-flex;
+      align-items: center;
+      padding: 0.35rem 0.65rem;
       border-radius: 999px;
-      background: rgba(255,255,255,0.06);
-      color: #d7def3;
-      border: 1px solid rgba(255,255,255,0.08);
-      font-size: 0.82rem;
+      background: #f3f5f9;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.8rem;
     }
 
     .about {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 1.2rem;
+      gap: 1rem;
     }
 
     .info-card {
-      background: var(--card);
-      border: 1px solid var(--card-border);
-      border-radius: var(--radius);
-      padding: 1.35rem;
-      box-shadow: var(--shadow);
+      padding: 1.2rem;
     }
 
     .info-card h3 {
-      margin: 0 0 0.8rem;
-      font-size: 1.15rem;
+      margin: 0 0 0.7rem;
+      font-size: 1rem;
     }
 
-    .info-card p, .info-card li {
+    .info-card p,
+    .info-card li {
+      margin: 0;
       color: var(--muted);
-      line-height: 1.7;
     }
 
     .info-card ul {
@@ -334,42 +246,35 @@
     }
 
     .footer {
-      padding: 2rem 0 3rem;
-      color: var(--muted);
-      font-size: 0.95rem;
+      padding: 0 0 3rem;
     }
 
     .footer-box {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 20px;
-      padding: 1rem 1.1rem;
+      padding: 1rem 1.2rem;
       display: flex;
       justify-content: space-between;
       gap: 1rem;
       flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 0.95rem;
     }
 
-    @media (max-width: 980px) {
-      .hero,
-      .projects,
+    strong {
+      color: var(--text);
+    }
+
+    @media (max-width: 720px) {
+      .nav {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
       .about {
         grid-template-columns: 1fr;
       }
 
-      .hero {
-        padding-top: 4rem;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .hero-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .nav {
-        flex-direction: column;
-        align-items: flex-start;
+      main {
+        padding-top: 3rem;
       }
 
       h1 {
@@ -381,7 +286,7 @@
 <body>
   <header class="topbar">
     <div class="container nav">
-      <div class="brand">Patrik<span> Projects</span></div>
+      <div class="brand">Patrik</div>
       <nav class="nav-links">
         <a href="#projekt">Projekt</a>
         <a href="#om">Om</a>
@@ -392,97 +297,70 @@
 
   <main class="container">
     <section class="hero">
-      <div>
-        <div class="eyebrow">Modern projektsida för 2026</div>
-        <h1>Enkla produkter med tydligt affärsvärde.</h1>
-        <p>
-          Här samlar jag mina pågående projekt inom säkerhet, interna verksamhetssystem och praktiska verktyg för vardagen. Fokus ligger på lösningar som är lätta att använda, snabba att införa och byggda för riktiga behov.
-        </p>
-        <div class="hero-actions">
-          <a class="btn btn-primary" href="#projekt">Se projekten</a>
-          <a class="btn btn-secondary" href="#kontakt">Kontakta mig</a>
-        </div>
+      <div class="eyebrow">Hobbyutvecklare</div>
+      <h1>Små projekt jag bygger på fritiden.</h1>
+      <p class="lead">
+        Jag gillar att testa idéer, bygga enkla verktyg och lära mig nya saker längs vägen.
+        Den här sidan är en enkel samling av några projekt jag pillar med när jag har tid över.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#projekt">Se projekt</a>
+        <a class="btn" href="#kontakt">Kontakt</a>
       </div>
-
-      <aside class="hero-card" aria-label="Översikt">
-        <div class="hero-grid">
-          <div class="mini-panel">
-            <div class="mini-label">Projekt</div>
-            <div class="mini-value">3</div>
-          </div>
-          <div class="mini-panel">
-            <div class="mini-label">Fokus</div>
-            <div class="mini-value">Säkerhet & drift</div>
-          </div>
-          <div class="mini-panel">
-            <div class="mini-label">Typ</div>
-            <div class="mini-value">Webbappar</div>
-          </div>
-          <div class="mini-panel">
-            <div class="mini-label">Miljö</div>
-            <div class="mini-value">Modern & enkel</div>
-          </div>
-        </div>
-      </aside>
     </section>
 
     <section id="projekt" class="section">
       <div class="section-header">
-        <div>
-          <h2>Projekt</h2>
-          <p>Tre lösningar med olika användningsområden, men samma mål: att göra arbetet enklare, tydligare och säkrare.</p>
-        </div>
+        <h2>Projekt</h2>
+        <p>Några små saker jag bygger, testar eller vidareutvecklar på fritiden.</p>
       </div>
 
       <div class="projects">
         <article class="project-card">
-          <div class="project-glow"></div>
-          <div class="project-top">
-            <div class="project-icon">🔐</div>
-            <div class="project-badge">Projekt 01</div>
+          <div class="project-meta">
+            <h3>App-säkerhetsgrej</h3>
+            <div class="project-number">01</div>
           </div>
-          <h3>Analys av mobilappar ur säkerhetsperspektiv</h3>
           <p>
-            Ett verktyg som hjälper verksamheter att snabbt analysera mobilappar ur ett informationssäkerhetsperspektiv. Lösningen sammanställer underlag, strukturerar riskfrågor och skapar ett tydligt beslutsstöd för granskning och dokumentation.
+            Ett projekt där jag testar hur man kan analysera mobilappar ur ett säkerhetsperspektiv.
+            Mest för att lära mig mer och se vad som går att förenkla.
           </p>
           <div class="tags">
-            <span class="tag">Informationssäkerhet</span>
-            <span class="tag">AI-stöd</span>
-            <span class="tag">DOCX-export</span>
+            <span class="tag">säkerhet</span>
+            <span class="tag">automation</span>
+            <span class="tag">experiment</span>
           </div>
         </article>
 
         <article class="project-card">
-          <div class="project-glow"></div>
-          <div class="project-top">
-            <div class="project-icon">🛠️</div>
-            <div class="project-badge">Projekt 02</div>
+          <div class="project-meta">
+            <h3>Enkel ärendehantering</h3>
+            <div class="project-number">02</div>
           </div>
-          <h3>Enkelt IT-ärendehanteringssystem</h3>
           <p>
-            Ett lättanvänt system för att registrera, följa upp och hantera IT-ärenden på ett strukturerat sätt. Fokus ligger på enkelhet, snabb överblick och ett arbetsflöde som fungerar bra även för mindre organisationer eller interna team.
+            Ett litet system för att hålla koll på IT-ärenden på ett enkelt sätt.
+            Fokus ligger mest på tydlighet och att det ska vara smidigt att använda.
           </p>
           <div class="tags">
-            <span class="tag">Ärenden</span>
-            <span class="tag">Intern drift</span>
-            <span class="tag">Översikt</span>
+            <span class="tag">webb</span>
+            <span class="tag">struktur</span>
+            <span class="tag">verktyg</span>
           </div>
         </article>
 
         <article class="project-card">
-          <div class="project-glow"></div>
-          <div class="project-top">
-            <div class="project-icon">📇</div>
-            <div class="project-badge">Projekt 03</div>
+          <div class="project-meta">
+            <h3>Kontaktbok för delade enheter</h3>
+            <div class="project-number">03</div>
           </div>
-          <h3>Kontaktbokshanterare</h3>
           <p>
-            En kontaktbok anpassad för delade enheter och MDM-miljöer. Lösningen är framtagen för att fungera utan krav på molntjänster och passar verksamheter som vill hantera kontaktuppgifter lokalt, kontrollerat och enkelt på gemensamma enheter.
+            Ett projekt för att hantera kontaktuppgifter lokalt på delade enheter.
+            Jag gillar att bygga enkla lösningar som funkar utan att bli onödigt krångliga.
           </p>
           <div class="tags">
-            <span class="tag">MDM</span>
-            <span class="tag">Ingen molntjänst</span>
-            <span class="tag">Delade enheter</span>
+            <span class="tag">mdm</span>
+            <span class="tag">lokalt</span>
+            <span class="tag">praktiskt</span>
           </div>
         </article>
       </div>
@@ -490,27 +368,26 @@
 
     <section id="om" class="section">
       <div class="section-header">
-        <div>
-          <h2>Om sidan</h2>
-          <p>Den här sidan är framtagen för att ge en snabb och tydlig bild av mina projekt, med enkel design och modern känsla anpassad för GitHub Pages.</p>
-        </div>
+        <h2>Om mig</h2>
+        <p>Jag bygger mest saker jag själv tycker verkar roliga, nyttiga eller intressanta att utforska.</p>
       </div>
 
       <div class="about">
         <div class="info-card">
-          <h3>Vad jag bygger</h3>
+          <h3>Vad jag gillar att bygga</h3>
           <p>
-            Jag fokuserar på praktiska digitala lösningar där användbarhet och verklig nytta står i centrum. Målet är att bygga verktyg som är lätta att förstå, enkla att införa och tillräckligt robusta för att användas i vardagen.
+            Ofta blir det små webbprojekt, interna verktyg eller idéer jag vill testa i praktiken.
+            Ibland blir det något användbart, ibland bara ett sätt att lära mig något nytt.
           </p>
         </div>
 
         <div class="info-card">
-          <h3>Gemensamma nämnare</h3>
+          <h3>Gemensamt för projekten</h3>
           <ul>
-            <li>enkla gränssnitt med tydlig struktur</li>
-            <li>fokus på intern nytta och effektivitet</li>
-            <li>säkerhet och kontroll där det behövs</li>
-            <li>lösningar som fungerar i verkliga verksamhetsmiljöer</li>
+            <li>enkla gränssnitt</li>
+            <li>små och tydliga lösningar</li>
+            <li>fokus på att lära mig nya saker</li>
+            <li>byggt på fritiden</li>
           </ul>
         </div>
       </div>
@@ -521,11 +398,9 @@
     <div class="container footer-box">
       <div>
         <strong>Kontakt</strong><br />
-        Lägg gärna till e-post, LinkedIn eller annan kontaktväg här.
+        Lägg till e-post, GitHub eller LinkedIn här.
       </div>
-      <div>
-        © 2026 Patrik Projects
-      </div>
+      <div>© 2026 Patrik</div>
     </div>
   </footer>
 </body>
