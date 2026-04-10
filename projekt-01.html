@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Projekt 01 - AI-checklista för informationssäkerhet</title>
+
+  <style>
+    :root {
+      --bg: #eef2f7;
+      --surface: #ffffff;
+      --border: #e7ebf2;
+      --text: #1b2230;
+      --muted: #667085;
+      --accent: #4f6ef7;
+      --maxw: 980px;
+      --radius: 16px;
+      --shadow: 0 8px 24px rgba(16, 24, 40, 0.05);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .container {
+      width: min(var(--maxw), calc(100% - 2rem));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(247, 248, 251, 0.88);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 0;
+    }
+
+    .brand {
+      font-weight: 700;
+    }
+
+    main {
+      padding: 4rem 0 3rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.5rem;
+    }
+
+    h1 {
+      margin: 0 0 1rem;
+      font-size: 2rem;
+      letter-spacing: -0.02em;
+    }
+
+    h2 {
+      margin-top: 1.75rem;
+      font-size: 1.2rem;
+    }
+
+    h3 {
+      margin-top: 1.25rem;
+      font-size: 1rem;
+    }
+
+    p, li {
+      color: var(--muted);
+    }
+
+    ul, ol {
+      padding-left: 1.25rem;
+    }
+
+    code {
+      background: #f3f5f9;
+      padding: 0.1rem 0.35rem;
+      border-radius: 6px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.75rem;
+      overflow: hidden;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    th, td {
+      text-align: left;
+      padding: 0.85rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--text);
+      background: #f8fafc;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .tags {
+      margin-top: 1rem;
+    }
+
+    .tag {
+      display: inline-flex;
+      padding: 0.35rem 0.65rem;
+      border-radius: 999px;
+      background: #f3f5f9;
+      border: 1px solid var(--border);
+      font-size: 0.8rem;
+      margin-right: 0.4rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .back {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    .back:hover {
+      color: var(--text);
+    }
+
+    .gallery {
+      margin-top: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      background: #f8fafc;
+    }
+
+    .viewer {
+      position: relative;
+      background: #dfe7f3;
+      aspect-ratio: 16 / 9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .viewer img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .nav-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 0;
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.9);
+      color: var(--text);
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      font-size: 1.2rem;
+      line-height: 1;
+    }
+
+    .nav-btn:hover {
+      background: #ffffff;
+    }
+
+    .prev { left: 16px; }
+    .next { right: 16px; }
+
+    .caption {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.9rem 1rem;
+      border-top: 1px solid var(--border);
+      background: #fff;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .thumbs {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+      gap: 0.75rem;
+      padding: 1rem;
+      background: #fff;
+      border-top: 1px solid var(--border);
+    }
+
+    .thumb {
+      border: 2px solid transparent;
+      border-radius: 12px;
+      overflow: hidden;
+      padding: 0;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .thumb img {
+      width: 100%;
+      height: 72px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .thumb.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(79, 110, 247, 0.12);
+    }
+
+    .gallery-note {
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 700px) {
+      .caption {
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        width: 40px;
+        height: 40px;
+      }
+
+      .thumb img {
+        height: 60px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="container nav">
+      <div class="brand">patschbyte</div>
+      <a href="index.html" class="back">← Tillbaka</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="card">
+      <h1>AI-checklista för informationssäkerhet – mobilapplikationer</h1>
+
+      <p>
+        Webb-tjänsten fungerar som ett stöd i verksamhetens informationssäkerhetsarbete genom att förenkla och standardisera bedömningen av mobilapplikationer. I normala fall genomförs denna typ av granskning manuellt, vilket ofta är både tidskrävande och resursintensivt. Genom att klistra in en länk till en app, välja en Word-mall och en AI-leverantör, kan användaren snabbt få fram en ifylld checklista som hjälper till att kvalitetssäkra appar innan de tas i bruk i verksamheten.
+      </p>
+
+      <div class="tags">
+        <span class="tag">informationssäkerhet</span>
+        <span class="tag">mobilappar</span>
+        <span class="tag">AI</span>
+        <span class="tag">automation</span>
+      </div>
+
+      <h2>Skärmbilder från lösningen</h2>
+      <p>
+        Här visas ett urval av gränssnittet och resultatflödet – från inmatning och AI-inställningar
+        till analyser, global sökning och export till Word-dokument.
+      </p>
+
+      <div class="gallery" aria-label="Bildspel med skärmbilder">
+        <div class="viewer">
+          <button class="nav-btn prev" type="button" aria-label="Föregående bild">‹</button>
+          <img id="mainSlide" src="1_.png" alt="Översikt av startsidan för AI-checklistan" />
+          <button class="nav-btn next" type="button" aria-label="Nästa bild">›</button>
+        </div>
+
+        <div class="caption">
+          <strong id="slideTitle">Översikt av startsidan</strong>
+          <span id="slideCounter">1 / 8</span>
+        </div>
+
+        <div class="thumbs">
+          <button class="thumb active" type="button" data-index="0"><img src="1_.png" alt="Miniatyr 1"></button>
+          <button class="thumb" type="button" data-index="1"><img src="2.png" alt="Miniatyr 2"></button>
+          <button class="thumb" type="button" data-index="2"><img src="3.png" alt="Miniatyr 3"></button>
+          <button class="thumb" type="button" data-index="3"><img src="4.png" alt="Miniatyr 4"></button>
+          <button class="thumb" type="button" data-index="4"><img src="5.png" alt="Miniatyr 5"></button>
+          <button class="thumb" type="button" data-index="5"><img src="6.png" alt="Miniatyr 6"></button>
+          <button class="thumb" type="button" data-index="6"><img src="7.png" alt="Miniatyr 7"></button>
+          <button class="thumb" type="button" data-index="7"><img src="8.png" alt="Miniatyr 8"></button>
+        </div>
+      </div>
+
+      <p class="gallery-note">
+        Bildspelet kan bläddras med pilarna eller genom att klicka på miniatyrerna.
+      </p>
+
+      <h2>Vad gör appen?</h2>
+      <p>
+        AI:n analyserar appens butikssida, fyller i ett fördefinierat Word-dokument med svar på säkerhetsfrågor,
+        och låter användaren ladda ner det färdiga dokumentet direkt. Resultatet är en ifylld checklista som kan
+        användas som underlag i organisationens säkerhetsarbete.
+      </p>
+
+      <h2>Flöde steg för steg</h2>
+      <ol>
+        <li><strong>Användaren klistrar in en app-URL</strong> från Google Play.</li>
+        <li><strong>Servern hämtar butikssidan</strong> och extraherar appnamn, leverantör, beskrivning och appikon.</li>
+        <li><strong>AI:n anropas</strong> med en prompt byggd från mallens platshållare och eventuella standardvärden som användaren angett.</li>
+        <li><strong>AI-svaret tolkas som JSON</strong> och normaliseras mot mallens fält. Standardvärden som användaren definierat tar alltid prioritet över AI:ns svar.</li>
+        <li><strong>Analysen sparas</strong> i en lokal historikfil på servern (<code>data/history.json</code>).</li>
+        <li><strong>Användaren kan exportera</strong> resultatet till ett Word-dokument där alla <code>{{platshållare}}</code> i mallen ersätts med de analyserade värdena.</li>
+      </ol>
+      <p>
+        Det finns även ett <strong>globalt söklarmsläge</strong> där servern kör ytterligare sökningar via DuckDuckGo
+        om exempelvis integritetspolicy, säkerhetsbrister och datadelning, och lägger in resultaten i AI-prompten
+        för ett mer underbyggt svar.
+      </p>
+
+      <h2>Teknik</h2>
+
+      <h3>Backend – Node.js med Express</h3>
+      <p>
+        Servern är skriven i <strong>Node.js</strong> och använder <strong>Express</strong> som webbramverk.
+        Den hanterar hämtning och parsning av butikssidor med inbyggd <code>fetch</code>, byggande av AI-prompts
+        utifrån mallens platshållare, anrop till AI-leverantörernas API:er, historikhantering via en lokal JSON-fil,
+        samt generering och nedladdning av Word-dokument.
+      </p>
+
+      <h3>Word-export – AdmZip och XML-manipulation</h3>
+      <p>
+        Word-dokument (<code>.docx</code>) är i grunden ZIP-arkiv med XML inuti. Appen använder <strong>AdmZip</strong>
+        för att öppna mallen, hitta platshållare av typen <code>{{fältnamn}}</code> i dokumentets XML, ersätta dem med
+        analyserade värden, och sedan spara det färdiga dokumentet.
+      </p>
+      <p>
+        En särskild utmaning är att Word ofta delar upp text i flera XML-element. Därför kan en platshållare vara
+        uppdelad i flera fragmenterade XML-noder. Appen hanterar detta med ett reguljärt uttryck som tillåter
+        godtyckliga XML-taggar mellan varje tecken i platshållarens namn.
+      </p>
+
+      <h3>AI-integration – flera leverantörer</h3>
+      <p>Appen stöder flera AI-leverantörer:</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Leverantör</th>
+            <th>Protokoll</th>
+            <th>Standardmodell</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Gemini</strong> (Google)</td>
+            <td>Eget REST-API</td>
+            <td>gemini-2.5-flash</td>
+          </tr>
+          <tr>
+            <td><strong>OpenAI</strong></td>
+            <td>OpenAI-kompatibelt</td>
+            <td>gpt-4.1-mini</td>
+          </tr>
+          <tr>
+            <td><strong>Grok</strong> (xAI)</td>
+            <td>OpenAI-kompatibelt</td>
+            <td>grok-4-fast-reasoning</td>
+          </tr>
+          <tr>
+            <td><strong>Copilot</strong> (Microsoft)</td>
+            <td>OpenAI-kompatibelt</td>
+            <td>gpt-4.1</td>
+          </tr>
+          <tr>
+            <td><strong>Annan/Custom</strong></td>
+            <td>OpenAI-kompatibelt</td>
+            <td>valfri</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        Alla OpenAI-kompatibla leverantörer använder samma anropsfunktion med konfigurerbar base URL och endpoint-path.
+      </p>
+
+      <h3>Global sökning – DuckDuckGo</h3>
+      <p>
+        I globalt läge körs upp till fyra sökningar mot <strong>DuckDuckGo</strong> via HTML-gränssnitt utan API-nyckel,
+        med söktermer som appens integritetspolicy, säkerhetsproblem och datadelning. Resultaten fogas in i AI-prompten
+        som kompletterande underlag.
+      </p>
+
+      <h3>Frontend – Vanilla HTML/CSS/JavaScript</h3>
+      <p>
+        Gränssnittet är byggt i ren HTML, CSS och JavaScript utan externa ramverk. Det använder <code>localStorage</code>
+        för att spara AI-inställningar lokalt i webbläsaren, collapsible panels för AI-inställningar, mall och standardvärden,
+        password-fält för API-nycklar och access tokens, samt realtidsvisning av analysresultat i ett skrivskyddat textfält.
+      </p>
+
+      <h3>Datalagring – lokal JSON-fil</h3>
+      <p>
+        All analyshistorik lagras i <code>data/history.json</code> direkt på serverns filsystem. Varje post innehåller
+        app-metadata, AI-inställningar, mallnamn, analysresultat och de standardvärden som användes.
+      </p>
+
+      <h2>Säkerhet och integritet</h2>
+      <ul>
+        <li>API-nycklar sparas <strong>enbart lokalt i användarens webbläsare</strong> via localStorage och lagras aldrig på servern.</li>
+        <li>Inmatade API-nycklar visas som <strong>maskerade punkter</strong> i gränssnittet.</li>
+        <li>URL-validering på servern tillåter för närvarande <strong>endast Google Play</strong>-länkar.</li>
+        <li>Exporterade Word-dokument sparas temporärt i mappen <code>exports/</code> på servern och kan laddas ner via en direktlänk.</li>
+      </ul>
+
+      <h2>Länkar</h2>
+      <p>
+        <a href="#">Privat repo (visas på begäran)</a>
+      </p>
+    </div>
+  </main>
+
+  <script>
+    const slides = [
+      { src: "1_.png", title: "Översikt av startsidan", alt: "Översikt av startsidan för AI-checklistan" },
+      { src: "2.png", title: "Konfiguration av AI-inställningar och mall", alt: "Sektioner för AI-inställningar, mall och standardvärden" },
+      { src: "3.png", title: "Analysresultat för Signal", alt: "Analysvy med resultat för Signal Private Messenger" },
+      { src: "4.png", title: "Analysresultat för eID2FA", alt: "Analysvy med resultat för eID2FA" },
+      { src: "5.png", title: "Global sökning och underlag", alt: "Analysvy med global sökning för TES" },
+      { src: "6.png", title: "Bekräftelse på fungerande anslutning", alt: "Grönt statusmeddelande om att Gemini-anslutningen fungerar" },
+      { src: "7.png", title: "Nedladdning av Word-dokument", alt: "Resultatkort med länk för att ladda ner Word-dokument" },
+      { src: "8.png", title: "Exporterad checklista i Word", alt: "Färdigexporterad checklista öppnad i Microsoft Word" }
+    ];
+
+    let currentIndex = 0;
+    const mainSlide = document.getElementById("mainSlide");
+    const slideTitle = document.getElementById("slideTitle");
+    const slideCounter = document.getElementById("slideCounter");
+    const thumbs = Array.from(document.querySelectorAll(".thumb"));
+    const prevBtn = document.querySelector(".prev");
+    const nextBtn = document.querySelector(".next");
+
+    function renderSlide(index) {
+      const slide = slides[index];
+      currentIndex = index;
+      mainSlide.src = slide.src;
+      mainSlide.alt = slide.alt;
+      slideTitle.textContent = slide.title;
+      slideCounter.textContent = `${index + 1} / ${slides.length}`;
+
+      thumbs.forEach((thumb, i) => {
+        thumb.classList.toggle("active", i === index);
+      });
+    }
+
+    function goNext() {
+      const nextIndex = (currentIndex + 1) % slides.length;
+      renderSlide(nextIndex);
+    }
+
+    function goPrev() {
+      const prevIndex = (currentIndex - 1 + slides.length) % slides.length;
+      renderSlide(prevIndex);
+    }
+
+    prevBtn.addEventListener("click", goPrev);
+    nextBtn.addEventListener("click", goNext);
+
+    thumbs.forEach((thumb, index) => {
+      thumb.addEventListener("click", () => renderSlide(index));
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowRight") goNext();
+      if (event.key === "ArrowLeft") goPrev();
+    });
+
+    renderSlide(0);
+  </script>
+</body>
+</html>
