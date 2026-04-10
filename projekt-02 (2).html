@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Projekt 02 - IT Ärendehantering</title>
+
+  <style>
+    :root {
+      --bg: #eef2f7;
+      --surface: #ffffff;
+      --border: #e7ebf2;
+      --text: #1b2230;
+      --muted: #667085;
+      --accent: #4f6ef7;
+      --maxw: 860px;
+      --radius: 16px;
+      --shadow: 0 8px 24px rgba(16, 24, 40, 0.05);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .container {
+      width: min(var(--maxw), calc(100% - 2rem));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      background: rgba(247, 248, 251, 0.88);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 0;
+      gap: 1rem;
+    }
+
+    .brand {
+      font-weight: 700;
+    }
+
+    main {
+      padding: 4rem 0 3rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.75rem;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 0.75rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 2.5rem);
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+
+    .lead {
+      margin: 1rem 0 0;
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 68ch;
+    }
+
+    .meta {
+      margin-top: 1.25rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .meta-item,
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.4rem 0.75rem;
+      border-radius: 999px;
+      background: #f3f5f9;
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    h2 {
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      font-size: 1.2rem;
+      letter-spacing: -0.01em;
+    }
+
+    p,
+    li {
+      color: var(--muted);
+    }
+
+    ul {
+      margin: 0.5rem 0 0;
+      padding-left: 1.2rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .panel {
+      padding: 1rem;
+      background: #fafbfc;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+
+    .panel h3 {
+      margin: 0 0 0.5rem;
+      font-size: 1rem;
+    }
+
+    .panel p,
+    .panel ul {
+      margin: 0;
+    }
+
+    .status-list li {
+      margin-bottom: 0.25rem;
+    }
+
+    .back {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      white-space: nowrap;
+    }
+
+    .back:hover {
+      color: var(--text);
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    @media (max-width: 640px) {
+      .card {
+        padding: 1.25rem;
+      }
+
+      .nav {
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="container nav">
+      <div class="brand">patschbyte</div>
+      <a href="index.html" class="back">← Tillbaka</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <article class="card">
+      <span class="eyebrow">Systembeskrivning</span>
+      <h1>IT Ärendehantering</h1>
+
+      <p class="lead">
+        Ett IT-supportsystem för kommunal IT-verksamhet som hanterar hela livscykeln för ärenden,
+        från att ett ärende skapas tills det stängs, dokumenteras och återanvänds som kunskap.
+      </p>
+
+      <div class="meta">
+        <span class="meta-item">2026-04-10</span>
+        <span class="tag">Node.js</span>
+        <span class="tag">Express</span>
+        <span class="tag">SQLite</span>
+        <span class="tag">PWA</span>
+        <span class="tag">AI-integration</span>
+      </div>
+
+      <h2>Vad gör applikationen?</h2>
+      <p>
+        Applikationen är byggd för att ge handläggare ett samlat stöd i arbetet med IT-support.
+        Systemet samlar inkommande ärenden, gör det enkelt att följa upp status, loggar alla viktiga
+        händelser och hjälper organisationen att återanvända tidigare lösningar i nya supportärenden.
+      </p>
+
+      <h2>Ärendehantering</h2>
+      <p>
+        Handläggare kan skapa ärenden manuellt eller importera dem direkt från inkommande e-post.
+        Varje ärende innehåller löpnummer, rubrik, beskrivning, avsändare, prioritet och aktuell status.
+      </p>
+      <ul class="status-list">
+        <li><strong>Ny</strong> – ärendet är registrerat men ännu inte påbörjat.</li>
+        <li><strong>Påbörjat</strong> – handläggning har startat.</li>
+        <li><strong>Väntar på användare</strong> – mer information eller återkoppling krävs.</li>
+        <li><strong>Löst</strong> – problemet är åtgärdat.</li>
+        <li><strong>Stängt</strong> – ärendet är avslutat och dokumenterat.</li>
+      </ul>
+
+      <h2>Händelselogg och konversation</h2>
+      <p>
+        Varje ärende har en fullständig historik där ändringar av status, kategori, handläggare eller
+        rubrik loggas automatiskt med tidsstämpel och information om vem som gjort ändringen.
+        Det finns även ett konversationsgränssnitt där handläggare kan svara användare externt via e-post
+        och skriva interna anteckningar som bara kollegor ser.
+      </p>
+
+      <h2>AI-driven kunskapsdatabas</h2>
+      <p>
+        När ett ärende stängs sparas lösningen i en inbyggd kunskapsdatabas. När en handläggare senare
+        söker hjälp i ett nytt ärende analyserar AI tidigare lösningar, identifierar liknande fall och
+        föreslår en konkret väg framåt på svenska med hänvisningar till relevanta ärendenummer.
+        Målet är att korta ned hanteringstiden och sprida kunskap automatiskt mellan handläggare.
+      </p>
+
+      <h2>Administration</h2>
+      <p>
+        Administratörer hanterar användare med rollerna <strong>admin</strong>, <strong>agent</strong>
+        och <strong>viewer</strong>, skapar ärendekategorier och följer statistik över öppna och
+        stängda ärenden.
+      </p>
+
+      <h2>Teknisk översikt</h2>
+      <div class="grid">
+        <section class="panel">
+          <h3>Backend</h3>
+          <p>
+            Skrivet i Node.js med Express. Autentisering sker via JWT-tokens i HttpOnly-cookie med
+            8 timmars giltighetstid, och lösenord lagras hashade med bcrypt.
+          </p>
+        </section>
+
+        <section class="panel">
+          <h3>Databas</h3>
+          <p>
+            Databaslagret använder SQLite via <code>node:sqlite</code> utan extern ORM. Tabeller finns
+            för användare, ärenden, historik, meddelanden, kategorier och lösningar.
+          </p>
+        </section>
+
+        <section class="panel">
+          <h3>E-post</h3>
+          <p>
+            E-post skickas via Nodemailer mot en konfigurerbar SMTP-server. Systemet kan automatiskt
+            skicka statusmeddelanden till slutanvändare när ett ärende påbörjas eller besvaras.
+          </p>
+        </section>
+
+        <section class="panel">
+          <h3>Frontend</h3>
+          <p>
+            Frontend är byggd som en Single Page Application i ren HTML, CSS och vanilla JavaScript.
+            Gränssnittet är responsivt, på svenska och installationsbart som PWA.
+          </p>
+        </section>
+
+        <section class="panel">
+          <h3>AI-integration</h3>
+          <p>
+            Backend kommunicerar direkt med Anthropic API via <code>/v1/messages</code> och modellen
+            <code>claude-sonnet-4</code> för sökningar i kunskapsdatabasen och strukturerade lösningsförslag.
+          </p>
+        </section>
+
+        <section class="panel">
+          <h3>Skalning framåt</h3>
+          <p>
+            SQLite används för snabb uppstart och enkel driftsättning. Vid större behov är planen att
+            migrera till en mer verksamhetsanpassad databaslösning som PostgreSQL eller SQL Server.
+          </p>
+        </section>
+      </div>
+    </article>
+  </main>
+</body>
+</html>
