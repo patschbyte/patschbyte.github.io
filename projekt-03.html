@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Systembeskrivning – Connect</title>
+
+  <style>
+    :root {
+      --bg: #9fa2a6;
+      --surface: #ffffff;
+      --border: #e7ebf2;
+      --text: #1b2230;
+      --muted: #667085;
+      --accent: #4f6ef7;
+      --maxw: 980px;
+      --radius: 16px;
+      --shadow: 0 8px 24px rgba(16, 24, 40, 0.05);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .container {
+      width: min(var(--maxw), calc(100% - 2rem));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(247, 248, 251, 0.88);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 0;
+      gap: 1rem;
+    }
+
+    .brand {
+      font-weight: 700;
+    }
+
+    main {
+      padding: 4rem 0 3rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.75rem;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 0.75rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 2.5rem);
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+
+    .lead {
+      margin: 1rem 0 0;
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 70ch;
+    }
+
+    .meta {
+      margin-top: 1.25rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .meta-item,
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.4rem 0.75rem;
+      border-radius: 999px;
+      background: #f3f5f9;
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    h2 {
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      font-size: 1.2rem;
+      letter-spacing: -0.01em;
+    }
+
+    h3 {
+      margin: 0 0 0.5rem;
+      font-size: 1rem;
+    }
+
+    p,
+    li,
+    td,
+    th {
+      color: var(--muted);
+    }
+
+    ul {
+      margin: 0.5rem 0 0;
+      padding-left: 1.2rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .panel {
+      padding: 1rem;
+      background: #fafbfc;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+
+    .panel p,
+    .panel ul {
+      margin: 0;
+    }
+
+    .back {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      white-space: nowrap;
+    }
+
+    .back:hover {
+      color: var(--text);
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      background: #fafbfc;
+    }
+
+    th, td {
+      padding: 0.9rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    th {
+      background: #f3f5f9;
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .note {
+      margin-top: 0.8rem;
+      font-size: 0.95rem;
+    }
+
+    .section-intro {
+      margin-bottom: 0.5rem;
+    }
+
+    @media (max-width: 640px) {
+      .card {
+        padding: 1.25rem;
+      }
+
+      .nav {
+        align-items: flex-start;
+      }
+
+      table, thead, tbody, tr, th, td {
+        display: block;
+      }
+
+      thead {
+        display: none;
+      }
+
+      tr {
+        border-bottom: 1px solid var(--border);
+      }
+
+      td {
+        padding: 0.6rem 1rem;
+        border-bottom: 0;
+      }
+
+      td::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 0.8rem;
+        color: var(--text);
+        font-weight: 600;
+        margin-bottom: 0.2rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="container nav">
+      <div class="brand">Connect</div>
+      <a href="index.html" class="back">← Tillbaka</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <article class="card">
+      <span class="eyebrow">Systembeskrivning</span>
+      <h1>Connect (Kontaktbokstjänst on-prem)</h1>
+
+      <p class="lead">
+        Connect är en lokal webbapplikation för hantering och distribution av verksamhetskontakter.
+        Tjänsten ersätter ett arbetssätt där verksamheter använder Google-konton och gör det möjligt att
+        importera, underhålla och distribuera kontaktböcker inom organisationens egen infrastruktur.
+      </p>
+
+      <div class="meta">
+        <span class="meta-item">On-prem</span>
+        <span class="tag">Node.js</span>
+        <span class="tag">Express</span>
+        <span class="tag">SQLite</span>
+        <span class="tag">JWT</span>
+        <span class="tag">PWA</span>
+      </div>
+
+      <h2>Bakgrund</h2>
+      <p>
+        Många verksamheten använder idag Google-konton för att hantera och distribuera kontaktuppgifter
+        till personal. Detta arbetssätt är inte hållbart långsiktigt ur ett drift-,
+        säkerhets- och förvaltningsperspektiv.
+      </p>
+      <p>
+        För att ersätta detta har jag utvecklat en lokal(on-prem) webbapplikation: Connect.
+      </p>
+
+      <h2>Syfte</h2>
+      <ul>
+        <li>möjliggöra lokal hantering av kontaktböcker</li>
+        <li>eliminera beroendet av externa molntjänster (t.ex. Google)</li>
+        <li>förenkla distribution av kontaktuppgifter till personal</li>
+        <li>säkerställa att kontaktdata hanteras inom organisationens egen infrastruktur</li>
+      </ul>
+
+      <h2>Övergripande funktion</h2>
+      <p class="section-intro">
+        Connect är en webbapplikation där samordnare kan importera, administrera och distribuera
+        kontaktböcker till personal.
+      </p>
+
+      <div class="grid">
+        <section class="panel">
+          <h3>Samordnare</h3>
+          <ul>
+            <li>importerar kontaktböcker (t.ex. från Google via CSV)</li>
+            <li>redigerar och underhåller kontakter</li>
+            <li>organiserar kontaktböcker</li>
+          </ul>
+        </section>
+
+        <section class="panel">
+          <h3>Systemet</h3>
+          <ul>
+            <li>genererar en QR-kod per kontaktbok</li>
+            <li>skapar kontaktfiler i VCF/vCard-format</li>
+            <li>gör kontaktböcker tillgängliga internt via webbgränssnitt</li>
+          </ul>
+        </section>
+
+        <section class="panel">
+          <h3>Personal</h3>
+          <ul>
+            <li>skannar QR-koden med mobiltelefon</li>
+            <li>laddar ner kontaktfil (VCF/vCard)</li>
+            <li>importerar kontakterna direkt till telefonens kontaktlista</li>
+          </ul>
+        </section>
+      </div>
+
+      <h2>Huvudfunktioner</h2>
+      <ul>
+        <li>Användarhantering (inloggning med lösenord eller PIN)</li>
+        <li>Rollbaserad åtkomst (admin, owner, user)</li>
+        <li>Skapa och hantera kontaktböcker</li>
+        <li>Import av kontakter via CSV</li>
+        <li>Manuell redigering av kontakter</li>
+        <li>Delning av kontaktböcker via QR-kod</li>
+        <li>Export till vCard (VCF) för mobilimport</li>
+        
+      </ul>
+
+      <h2>Teknisk översikt</h2>
+      <table aria-label="Teknisk översikt">
+        <thead>
+          <tr>
+            <th>Komponent</th>
+            <th>Teknik</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td data-label="Komponent">Backend</td>
+            <td data-label="Teknik">Node.js (Express)</td>
+          </tr>
+          <tr>
+            <td data-label="Komponent">Databas</td>
+            <td data-label="Teknik">SQLite (lokal fil)</td>
+          </tr>
+          <tr>
+            <td data-label="Komponent">Autentisering</td>
+            <td data-label="Teknik">JWT (cookie-baserad)</td>
+          </tr>
+          <tr>
+            <td data-label="Komponent">Lösenordshantering</td>
+            <td data-label="Teknik">bcrypt</td>
+          </tr>
+          <tr>
+            <td data-label="Komponent">Frontend</td>
+            <td data-label="Teknik">HTML/CSS/JS (vanilla)</td>
+          </tr>
+          <tr>
+            <td data-label="Komponent">QR-generering</td>
+            <td data-label="Teknik">qrcode (npm)</td>
+          </tr>
+          <tr>
+            <td data-label="Komponent">Distribution</td>
+            <td data-label="Teknik">HTTP (webbserver)</td>
+          </tr>
+         
+        </tbody>
+      </table>
+
+      <h2></h2>
+      <ul>
+        <li>Node.js (version ≥ 18 rekommenderas)</li>
+        <li>Linux- eller Windows-server (on-prem)</li>
+        <li>Ingen extern databas krävs (SQLite används)</li>
+        <li>Ingen internetuppkoppling krävs för drift (förutom ev. initial installation)</li>
+      </ul>
+
+      <h2>Säkerhet</h2>
+      <ul>
+        <li>Lösenord lagras hashade (bcrypt)</li>
+        <li>JWT används för sessionshantering</li>
+        <li>Rollbaserad åtkomstkontroll</li>
+        <li>Möjlighet att köra helt isolerat från externa tjänster</li>
+      </ul>
+     
+
+      <h2>Lagring</h2>
+      <p>
+        All data lagras lokalt i en SQLite-databas (<code>app.db</code>).
+      </p>
+      <p>Innehåll:</p>
+      <ul>
+        <li>användare</li>
+        <li>kontaktböcker</li>
+        <li>kontakter</li>
+        <li>behörigheter</li>
+      </ul>
+      <p>
+        Backup kan ske genom enkel kopiering av databasfil.
+      </p>
+
+
+      <h2>Målgrupp</h2>
+      <ul>
+        <li>Samordnare (administration av kontaktböcker)</li>
+        <li>Personal (konsument av kontakter via mobil)</li>
+      </ul>
+
+      <h2>Nytta för verksamheten</h2>
+      <ul>
+        <li>Tar bort beroendet av Google-konton</li>
+        <li>Centraliserar kontaktdata</li>
+        <li>Förenklar distribution till personal</li>
+        <li>Ökar kontroll över data (on-prem)</li>
+        <li>Minskad administrativ belastning</li>
+      </ul>
+
+      <h2>Övrigt</h2>
+      <ul>
+        <li>Systemet är avsett för intern användning</li>
+        <li>Ingen integration med externa system krävs</li>
+      </ul>
+    
+
+<h2>Skärmbilder från systemet</h2>
+<div class="gallery" aria-label="Bildspel med skärmbilder från ärendehanteringssystemet">
+        <div class="viewer">
+          <button class="nav-btn prev" type="button" aria-label="Föregående bild">‹</button>
+          <img id="mainSlide" src="2_1.png" alt="Översikt av AI-drivet ärendehanteringssystem" />
+          <button class="nav-btn next" type="button" aria-label="Nästa bild">›</button>
+        </div>
+
+        <div class="caption">
+          <strong id="slideTitle">Översikt av systemet</strong>
+          <span id="slideCounter">1 / 6</span>
+        </div>
+
+        <div class="thumbs">
+          <button class="thumb active" type="button" data-index="0"><img src="2_1.png" alt="Miniatyr 1"></button>
+          <button class="thumb" type="button" data-index="1"><img src="2_2.png" alt="Miniatyr 2"></button>
+          <button class="thumb" type="button" data-index="2"><img src="2_3.png" alt="Miniatyr 3"></button>
+          <button class="thumb" type="button" data-index="3"><img src="2_4.png" alt="Miniatyr 4"></button>
+          <button class="thumb" type="button" data-index="4"><img src="2_5.png" alt="Miniatyr 5"></button>
+          <button class="thumb" type="button" data-index="5"><img src="2_6.png" alt="Miniatyr 6"></button>
+           <button class="thumb" type="button" data-index="6"><img src="2_7.png" alt="Miniatyr 7"></button>
+        </div>
+      
+<div class="lightbox" id="lightbox" aria-hidden="true">
+        <button class="lightbox-close" id="lightboxClose" type="button" aria-label="Stäng fullskärmsbild">×</button>
+        <img id="lightboxImage" src="2_1.png" alt="Förstorad skärmbild" />
+      </div>
+</article>
+  </main>
+<script>
+    const slides = [
+      { src: "2_1.png", title: "Översikt av systemet", alt: "Översikt av AI-drivet ärendehanteringssystem" },
+      { src: "2_2.png", title: "Ärendedetaljer och status", alt: "Vy över ärendedetaljer och statusinformation" },
+      { src: "2_3.png", title: "Historik och uppföljning", alt: "Historik för ärenden och uppföljning i systemet" },
+      { src: "2_4.png", title: "Konversation och interna anteckningar", alt: "Konversationsvy med svar och interna anteckningar" },
+      { src: "2_5.png", title: "Kunskapsstöd och AI-förslag", alt: "AI-baserade förslag och återanvändning av tidigare lösningar" },
+      { src: "2_6.png", title: "Administration och översikt", alt: "Administrationsvy med översikt och statistik" },
+      { src: "2_7.png", title: "Extra skärmbild", alt: "Ytterligare skärmbild från ärendehanteringssystemet" }
+    ];
+
+    let currentIndex = 0;
+    const mainSlide = document.getElementById("mainSlide");
+    const slideTitle = document.getElementById("slideTitle");
+    const slideCounter = document.getElementById("slideCounter");
+    const thumbs = Array.from(document.querySelectorAll(".thumb"));
+    const prevBtn = document.querySelector(".prev");
+    const nextBtn = document.querySelector(".next");
+    const viewer = document.querySelector(".viewer");
+    const lightbox = document.getElementById("lightbox");
+    const lightboxImage = document.getElementById("lightboxImage");
+    const lightboxClose = document.getElementById("lightboxClose");
+
+    function renderSlide(index) {
+      const slide = slides[index];
+      currentIndex = index;
+      mainSlide.src = slide.src;
+      mainSlide.alt = slide.alt;
+      lightboxImage.src = slide.src;
+      lightboxImage.alt = slide.alt;
+      slideTitle.textContent = slide.title;
+      slideCounter.textContent = `${index + 1} / ${slides.length}`;
+
+      thumbs.forEach((thumb, i) => {
+        thumb.classList.toggle("active", i === index);
+      });
+    }
+
+    function goNext() {
+      const nextIndex = (currentIndex + 1) % slides.length;
+      renderSlide(nextIndex);
+    }
+
+    function goPrev() {
+      const prevIndex = (currentIndex - 1 + slides.length) % slides.length;
+      renderSlide(prevIndex);
+    }
+
+    prevBtn.addEventListener("click", goPrev);
+    nextBtn.addEventListener("click", goNext);
+
+    thumbs.forEach((thumb, index) => {
+      thumb.addEventListener("click", () => renderSlide(index));
+    });
+
+    function openLightbox() {
+      lightbox.classList.add("open");
+      lightbox.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeLightbox() {
+      lightbox.classList.remove("open");
+      lightbox.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+    }
+
+    viewer.addEventListener("click", openLightbox);
+    lightboxClose.addEventListener("click", closeLightbox);
+    lightbox.addEventListener("click", (event) => {
+      if (event.target === lightbox) closeLightbox();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowRight" && !lightbox.classList.contains("open")) goNext();
+      if (event.key === "ArrowLeft" && !lightbox.classList.contains("open")) goPrev();
+      if (event.key === "Escape" && lightbox.classList.contains("open")) closeLightbox();
+    });
+
+    renderSlide(0);
+  </script>
+</body>
+</html>
