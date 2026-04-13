@@ -238,6 +238,165 @@
         margin-bottom: 0.2rem;
       }
     }
+  
+
+    .gallery {
+      margin-top: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      background: #f8fafc;
+    }
+
+    .viewer {
+      position: relative;
+      background: #dfe7f3;
+      aspect-ratio: 16 / 9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .viewer img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .nav-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 0;
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.9);
+      color: var(--text);
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      font-size: 1.2rem;
+      line-height: 1;
+    }
+
+    .nav-btn:hover {
+      background: #ffffff;
+    }
+
+    .prev { left: 16px; }
+
+    .next { right: 16px; }
+
+    .caption {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.9rem 1rem;
+      border-top: 1px solid var(--border);
+      background: #fff;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .thumbs {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+      gap: 0.75rem;
+      padding: 1rem;
+      background: #fff;
+      border-top: 1px solid var(--border);
+    }
+
+    .thumb {
+      border: 2px solid transparent;
+      border-radius: 12px;
+      overflow: hidden;
+      padding: 0;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .thumb img {
+      width: 100%;
+      height: 72px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .thumb.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(79, 110, 247, 0.12);
+    }
+
+    .gallery-note {
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
+    }
+
+    .viewer {
+      cursor: zoom-in;
+    }
+
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 14, 20, 0.92);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      z-index: 1000;
+    }
+
+    .lightbox.open {
+      display: flex;
+    }
+
+    .lightbox img {
+      max-width: min(96vw, 1800px);
+      max-height: 90vh;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+      background: #fff;
+    }
+
+    .lightbox-close {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      border: 0;
+      width: 46px;
+      height: 46px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.95);
+      color: #111827;
+      font-size: 1.6rem;
+      line-height: 1;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+    }
+
+    .lightbox-close:hover {
+      background: #ffffff;
+    }
+
+    @media (max-width: 700px) {
+      .caption {
+        flex-direction: column;
+      }
+
+      
+
+    @media (max-width: 640px) {
+      .card {
+        padding: 1.25rem;
+      }
+
+      
   </style>
 </head>
 
@@ -459,15 +618,17 @@
       </div>
 </article>
   </main>
-<script>
+
+  <script>
     const slides = [
-      { src: "2_1.png", title: "Översikt av systemet", alt: "Översikt av AI-drivet ärendehanteringssystem" },
-      { src: "2_2.png", title: "Ärendedetaljer och status", alt: "Vy över ärendedetaljer och statusinformation" },
-      { src: "2_3.png", title: "Historik och uppföljning", alt: "Historik för ärenden och uppföljning i systemet" },
-      { src: "2_4.png", title: "Konversation och interna anteckningar", alt: "Konversationsvy med svar och interna anteckningar" },
-      { src: "2_5.png", title: "Kunskapsstöd och AI-förslag", alt: "AI-baserade förslag och återanvändning av tidigare lösningar" },
-      { src: "2_6.png", title: "Administration och översikt", alt: "Administrationsvy med översikt och statistik" },
-      { src: "2_7.png", title: "Extra skärmbild", alt: "Ytterligare skärmbild från ärendehanteringssystemet" }
+      { src: "3_1.png", title: "Välkomstvy", alt: "Välkomstvy i Connect" },
+      { src: "3_2.png", title: "Inloggning med lösenord", alt: "Inloggning med lösenord i Connect" },
+      { src: "3_3.png", title: "Inloggning med PIN", alt: "Inloggning med PIN i Connect" },
+      { src: "3_4.png", title: "Mina kontaktböcker", alt: "Översikt över kontaktböcker i Connect" },
+      { src: "3_5.png", title: "Visa kontakter", alt: "Visning av kontakter i en kontaktbok" },
+      { src: "3_6.png", title: "Redigera kontaktbok", alt: "Redigering av kontakter i Connect" },
+      { src: "3_7.png", title: "QR-koder för export", alt: "QR-koder för Android och iPhone i Connect" },
+      { src: "3_8.png", title: "Adminpanel", alt: "Adminpanel i Connect" }
     ];
 
     let currentIndex = 0;
@@ -498,13 +659,11 @@
     }
 
     function goNext() {
-      const nextIndex = (currentIndex + 1) % slides.length;
-      renderSlide(nextIndex);
+      renderSlide((currentIndex + 1) % slides.length);
     }
 
     function goPrev() {
-      const prevIndex = (currentIndex - 1 + slides.length) % slides.length;
-      renderSlide(prevIndex);
+      renderSlide((currentIndex - 1 + slides.length) % slides.length);
     }
 
     prevBtn.addEventListener("click", goPrev);
@@ -540,5 +699,6 @@
 
     renderSlide(0);
   </script>
+
 </body>
 </html>
