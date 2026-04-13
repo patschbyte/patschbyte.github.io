@@ -262,6 +262,57 @@
       font-size: 0.95rem;
     }
 
+    .viewer {
+      cursor: zoom-in;
+    }
+
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 14, 20, 0.92);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      z-index: 1000;
+    }
+
+    .lightbox.open {
+      display: flex;
+    }
+
+    .lightbox img {
+      max-width: min(96vw, 1800px);
+      max-height: 90vh;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+      background: #fff;
+    }
+
+    .lightbox-close {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      border: 0;
+      width: 46px;
+      height: 46px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.95);
+      color: #111827;
+      font-size: 1.6rem;
+      line-height: 1;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+    }
+
+    .lightbox-close:hover {
+      background: #ffffff;
+    }
+
+
     @media (max-width: 700px) {
       .caption {
         flex-direction: column;
@@ -332,7 +383,7 @@
 
         <div class="caption">
           <strong id="slideTitle">Översikt av systemet</strong>
-          <span id="slideCounter">1 / 7</span>
+          <span id="slideCounter">1 / 6</span>
         </div>
 
         <div class="thumbs">
@@ -344,6 +395,11 @@
           <button class="thumb" type="button" data-index="5"><img src="2_6.png" alt="Miniatyr 6"></button>
            <button class="thumb" type="button" data-index="6"><img src="2_7.png" alt="Miniatyr 7"></button>
         </div>
+      </div>
+
+      <div class="lightbox" id="lightbox" aria-hidden="true">
+        <button class="lightbox-close" id="lightboxClose" type="button" aria-label="Stäng fullskärmsbild">×</button>
+        <img id="lightboxImage" src="2_1.png" alt="Förstorad skärmbild" />
       </div>
 
       <p class="gallery-note">
@@ -453,9 +509,8 @@
       { src: "2_3.png", title: "Historik och uppföljning", alt: "Historik för ärenden och uppföljning i systemet" },
       { src: "2_4.png", title: "Konversation och interna anteckningar", alt: "Konversationsvy med svar och interna anteckningar" },
       { src: "2_5.png", title: "Kunskapsstöd och AI-förslag", alt: "AI-baserade förslag och återanvändning av tidigare lösningar" },
-      { src: "2_6.png", title: "Administration och översikt", alt: "Administrationsvy med översikt och statistik" }
-      { src: "2_7.png", title: "Stänga ärenden", alt: "Stänga ärenden" }
-
+      { src: "2_6.png", title: "Administration och översikt", alt: "Administrationsvy med översikt och statistik" },
+      { src: "2_7.png", title: "Extra skärmbild", alt: "Ytterligare skärmbild från ärendehanteringssystemet" }
     ];
 
     let currentIndex = 0;
@@ -465,12 +520,18 @@
     const thumbs = Array.from(document.querySelectorAll(".thumb"));
     const prevBtn = document.querySelector(".prev");
     const nextBtn = document.querySelector(".next");
+    const viewer = document.querySelector(".viewer");
+    const lightbox = document.getElementById("lightbox");
+    const lightboxImage = document.getElementById("lightboxImage");
+    const lightboxClose = document.getElementById("lightboxClose");
 
     function renderSlide(index) {
       const slide = slides[index];
       currentIndex = index;
       mainSlide.src = slide.src;
       mainSlide.alt = slide.alt;
+      lightboxImage.src = slide.src;
+      lightboxImage.alt = slide.alt;
       slideTitle.textContent = slide.title;
       slideCounter.textContent = `${index + 1} / ${slides.length}`;
 
@@ -496,9 +557,28 @@
       thumb.addEventListener("click", () => renderSlide(index));
     });
 
+    function openLightbox() {
+      lightbox.classList.add("open");
+      lightbox.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeLightbox() {
+      lightbox.classList.remove("open");
+      lightbox.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+    }
+
+    viewer.addEventListener("click", openLightbox);
+    lightboxClose.addEventListener("click", closeLightbox);
+    lightbox.addEventListener("click", (event) => {
+      if (event.target === lightbox) closeLightbox();
+    });
+
     document.addEventListener("keydown", (event) => {
-      if (event.key === "ArrowRight") goNext();
-      if (event.key === "ArrowLeft") goPrev();
+      if (event.key === "ArrowRight" && !lightbox.classList.contains("open")) goNext();
+      if (event.key === "ArrowLeft" && !lightbox.classList.contains("open")) goPrev();
+      if (event.key === "Escape" && lightbox.classList.contains("open")) closeLightbox();
     });
 
     renderSlide(0);
