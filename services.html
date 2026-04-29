@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html lang="sv">
-<head>
-<meta charset="UTF-8">
-<title>Afrem</title>
-</head>
+<head><meta charset="UTF-8"><title>Tjänster</title></head>
 <body>
 
 <style>
@@ -47,33 +44,20 @@
   <a href="contact.html">Kontakt</a>
 </div>
 
-
 <div class="container">
-  <h1>Afrem</h1>
-  <p>Enkla lösningar för offentlig och privat sektor.</p>
+<h1>Tjänster</h1>
 
-  <div style="background:#1e1e1e;color:#00ff9c;padding:20px;border-radius:12px;margin-top:30px;font-family:monospace;">
-    afrem@system:~$ start afrem<br>
-    <span id="typed"></span><span style="animation:blink 1s infinite;">_</span>
-  </div>
+<h3>AI-lösningar</h3>
+<p>Intelligenta system för automation och beslutsstöd.</p>
+
+<h3>Kommunikation</h3>
+<p>SMS, kontaktböcker och API-integrationer.</p>
+
+<h3>Media & Streaming</h3>
+<p>Skalbara appar för mediahantering.</p>
+
+<h3>Systemintegration</h3>
+<p>API:er som kopplar ihop system.</p>
 </div>
-
-<style>
-@keyframes blink { 50% { opacity: 0; } }
-</style>
-
-<script>
-const text = "initializing platform...";
-let i = 0;
-function type() {
-  if (i < text.length) {
-    document.getElementById("typed").innerHTML += text[i];
-    i++;
-    setTimeout(type, 70);
-  }
-}
-type();
-</script>
-
 </body>
 </html>
