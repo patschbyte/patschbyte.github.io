@@ -1,1 +1,1477 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<title>Barnard's Star — 3200 CE</title>
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  html, body { width:100%; height:100%; margin:0; overflow:hidden; background:#000; }
+  #renderCanvas { width:100%; height:100%; display:block; touch-action:none; }
 
+  #hud {
+    position:absolute; inset:0; pointer-events:none;
+    font-family: 'Courier New', monospace;
+    color: #ff8800;
+  }
+  #hud::before {
+    content:''; position:absolute; inset:0;
+    background: repeating-linear-gradient(
+      to bottom, transparent 0px, transparent 3px,
+      rgba(0,0,0,0.06) 3px, rgba(0,0,0,0.06) 4px
+    );
+    pointer-events:none;
+  }
+
+  #topBar {
+    position:absolute; top:0; left:0; right:0;
+    padding:8px 14px;
+    display:flex; justify-content:space-between; align-items:flex-start;
+    border-bottom: 1px solid rgba(255,136,0,0.15);
+    background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
+    text-shadow: 0 0 6px rgba(255,136,0,0.8);
+    font-size:12px; letter-spacing:0.1em;
+  }
+  #stateLabel {
+    font-size:12px; opacity:0.9;
+    padding: 2px 8px; border:1px solid rgba(255,136,0,0.4);
+  }
+  #bottomBar {
+    position:absolute; bottom:0; left:0; right:0;
+    padding:8px 14px;
+    display:flex; justify-content:space-between; align-items:flex-end;
+    border-top: 1px solid rgba(255,136,0,0.15);
+    background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+    font-size:11px; opacity:0.75; letter-spacing:0.06em;
+  }
+
+  #rightPanel {
+    position:absolute; right:14px; top:50%; transform:translateY(-50%);
+    display:flex; flex-direction:column; align-items:flex-end; gap:8px;
+  }
+  .gauge-label { font-size:9px; letter-spacing:0.15em; opacity:0.55; text-align:right; margin-bottom:1px; }
+  .gauge-value { font-size:14px; text-shadow: 0 0 8px rgba(255,136,0,0.9); }
+  .gauge-bar-wrap {
+    width:4px; height:90px;
+    border:1px solid rgba(255,136,0,0.35); position:relative; overflow:hidden;
+  }
+  .gauge-bar-fill {
+    position:absolute; bottom:0; width:100%;
+    background: linear-gradient(to top, #ff4400, #ff8800);
+    box-shadow: 0 0 6px rgba(255,136,0,0.7);
+    transition: height 0.15s;
+  }
+
+  #leftPanel {
+    position:absolute; left:14px; top:50%; transform:translateY(-50%);
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+  }
+
+  #crosshair {
+    position:absolute; left:50%; top:50%;
+    transform:translate(-50%,-50%);
+    width:20px; height:20px; pointer-events:none;
+  }
+  #crosshair::before, #crosshair::after {
+    content:''; position:absolute; background:rgba(255,136,0,0.65);
+  }
+  #crosshair::before { width:1px; height:100%; left:50%; top:0; margin-left:-0.5px; }
+  #crosshair::after  { width:100%; height:1px; left:0; top:50%; margin-top:-0.5px; }
+  .ch-dot {
+    position:absolute; left:50%; top:50%;
+    width:3px; height:3px; margin-left:-1.5px; margin-top:-1.5px;
+    background:#ff8800; box-shadow:0 0 6px rgba(255,136,0,1);
+  }
+
+  #flash {
+    position:absolute; inset:0; background:rgba(255,180,80,0);
+    pointer-events:none; transition:background 0.3s;
+  }
+  #flash.active { background:rgba(255,180,80,0.12); }
+
+  #clickHint {
+    position:absolute; left:50%; top:50%;
+    transform:translate(-50%, 60px);
+    font-size:11px; letter-spacing:0.12em; opacity:0.5;
+    pointer-events:none;
+  }
+
+  /* ── Splash screen ── */
+  #splash {
+    position: fixed; inset: 0; z-index: 100;
+    background: #000;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    font-family: 'Share Tech Mono', 'Courier New', monospace;
+    overflow: hidden;
+    transition: opacity 0.8s ease;
+  }
+  #splash.fade-out { opacity: 0; pointer-events: none; }
+
+  /* Animated star field behind the splash */
+  #splash-stars {
+    position: absolute; inset: 0; overflow: hidden;
+  }
+  .splash-star {
+    position: absolute; border-radius: 50%;
+    background: #fff;
+    animation: twinkle var(--d) ease-in-out infinite alternate;
+    animation-delay: var(--delay);
+    opacity: var(--op);
+  }
+  @keyframes twinkle { from { opacity: var(--op); } to { opacity: calc(var(--op) * 0.2); } }
+
+  #splash-content {
+    position: relative; z-index: 2;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 0;
+    text-align: center;
+  }
+
+  #splash-eyebrow {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px; letter-spacing: 0.35em;
+    color: #ff6600; opacity: 0.7;
+    margin-bottom: 18px;
+    text-transform: uppercase;
+    animation: fadeSlideUp 1s ease 0.2s both;
+  }
+
+  #splash-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(36px, 7vw, 82px);
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    color: #fff;
+    text-shadow:
+      0 0 40px rgba(255,120,30,0.6),
+      0 0 80px rgba(255,80,0,0.3),
+      0 0 120px rgba(255,60,0,0.15);
+    animation: fadeSlideUp 1s ease 0.4s both;
+    margin-bottom: 6px;
+  }
+
+  #splash-subtitle {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(10px, 1.5vw, 14px);
+    letter-spacing: 0.5em;
+    color: #ff8800;
+    opacity: 0.55;
+    text-transform: uppercase;
+    animation: fadeSlideUp 1s ease 0.6s both;
+    margin-bottom: 64px;
+  }
+
+  #splash-divider {
+    width: 260px; height: 1px;
+    background: linear-gradient(to right, transparent, rgba(255,136,0,0.5), transparent);
+    margin-bottom: 48px;
+    animation: fadeSlideUp 1s ease 0.7s both;
+  }
+
+  #splash-form {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 20px;
+    animation: fadeSlideUp 1s ease 0.9s both;
+  }
+
+  #splash-label {
+    font-size: 16px; letter-spacing: 0.3em;
+    color: #ff8800; opacity: 0.6;
+    text-transform: uppercase;
+  }
+
+  #commander-input {
+    background: transparent;
+    border: none; border-bottom: 1px solid rgba(255,136,0,0.6);
+    color: #ff8800;
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(16px, 2.5vw, 22px);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-align: center;
+    width: 280px; padding: 8px 4px;
+    outline: none;
+    text-transform: uppercase;
+    caret-color: #ff6600;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  #commander-input::placeholder {
+    color: rgba(255,136,0,0.25);
+    font-size: 14px; letter-spacing: 0.2em;
+  }
+  #commander-input:focus {
+    border-bottom-color: #ff8800;
+    box-shadow: 0 4px 20px rgba(255,136,0,0.15);
+  }
+
+  #splash-start {
+    margin-top: 12px;
+    background: transparent;
+    border: 1px solid rgba(255,136,0,0.5);
+    color: #ff8800;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    padding: 14px 48px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative; overflow: hidden;
+  }
+  #splash-start::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: rgba(255,136,0,0);
+    transition: background 0.2s;
+  }
+  #splash-start:hover::before { background: rgba(255,136,0,0.08); }
+  #splash-start:hover {
+    border-color: #ff8800;
+    box-shadow: 0 0 24px rgba(255,136,0,0.2), inset 0 0 24px rgba(255,136,0,0.04);
+    color: #ffaa44;
+  }
+  #splash-start:active { transform: scale(0.98); }
+  #splash-start:disabled {
+    opacity: 0.25; cursor: default;
+  }
+  #splash-start:disabled:hover::before { background: transparent; }
+  #splash-start:disabled:hover { box-shadow: none; border-color: rgba(255,136,0,0.5); color: #ff8800; }
+
+  #splash-version {
+    position: absolute; bottom: 24px;
+    font-size: 10px; letter-spacing: 0.2em;
+    color: rgba(255,136,0,0.7);
+    animation: fadeSlideUp 1s ease 1.2s both;
+  }
+
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Hide HUD and canvas interaction until game starts */
+  #hud { display: none; }
+  #renderCanvas { pointer-events: none; }
+
+</style>
+</head>
+<body>
+<div id="splash">
+  <div id="splash-stars"></div>
+  <div id="splash-content">
+    <div id="splash-eyebrow">3200 CE &nbsp;·&nbsp; Deep Space Exploration</div>
+    <div id="splash-title">BARNARD'S STAR</div>
+    <div id="splash-subtitle">A Frontier Simulation</div>
+    <div id="splash-divider"></div>
+    <div id="splash-form">
+      <div id="splash-label">Enter Commander Name</div>
+      <input id="commander-input" type="text" maxlength="20" placeholder="COMMANDER" autocomplete="off" spellcheck="false">
+      <button id="splash-start" disabled>LAUNCH</button>
+    </div>
+  </div>
+  <div id="splash-version">v0.1.0 &nbsp;·&nbsp; MADE BY PATSCHBYTE</div>
+</div>
+
+<canvas id="renderCanvas"></canvas>
+<div id="hud">
+  <div id="flash"></div>
+
+  <div id="topBar">
+    <div id="dateStatus">01 JAN 3200 &nbsp;·&nbsp; BARNARD'S STAR</div>
+    <div id="stateLabel">SURFACE</div>
+    <div id="coordDisplay">LAT 0.0° LON 0.0°</div>
+  </div>
+
+  <div id="crosshair"><div class="ch-dot"></div></div>
+  <div id="clickHint">CLICK TO ENABLE MOUSE LOOK</div>
+
+  <div id="rightPanel">
+    <div>
+      <div class="gauge-label">ALTITUDE</div>
+      <div class="gauge-value" id="altVal">0 m</div>
+    </div>
+    <div class="gauge-bar-wrap"><div class="gauge-bar-fill" id="altFill" style="height:0%"></div></div>
+    <div>
+      <div class="gauge-label">SPEED</div>
+      <div class="gauge-value" id="spdVal">0 m/s</div>
+    </div>
+  </div>
+
+  <div id="leftPanel">
+    <div class="gauge-label">GRAV</div>
+    <div class="gauge-bar-wrap"><div class="gauge-bar-fill" id="gravFill" style="height:100%"></div></div>
+    <div class="gauge-value" id="gravVal" style="font-size:11px">1.00g</div>
+  </div>
+
+  <div id="bottomBar">
+    <div>WASD · MOVE &nbsp; MOUSE · LOOK &nbsp; SPACE · UP &nbsp; SHIFT · DOWN</div>
+    <div id="velDisplay">VEL 0.0 / 0.0 / 0.0</div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+// ═══════════════════════════════════════════════════════
+//  CONSTANTS
+// ═══════════════════════════════════════════════════════
+const MOON_RADIUS      = 5000;
+const SURFACE_GRAVITY  = 10.0;
+const PLAYER_HEIGHT    = 3.5;
+const ATMO_HEIGHT      = 500;
+const SPACE_HEIGHT     = 1500;
+const SURFACE_ACCEL    = 45.0;   // strong enough to overcome surface friction
+const SPACE_ACCEL      = 12.0;
+const DAMP_TANGENT     = 0.998;  // horizontal friction on surface (per frame at 60fps)
+const DAMP_RADIAL      = 0.9995; // vertical damping on surface
+const DAMP_SPACE       = 0.9998; // near-zero damping in space (Newtonian drift)
+const BASE_SIZE        = 24;
+
+const STATE = { SURFACE:'SURFACE', LOW_ORBIT:'LOW_ORBIT', SPACE:'SPACE' };
+
+// ═══════════════════════════════════════════════════════
+//  FLOATING ORIGIN
+//  Universe positions live here (large coords OK).
+//  All Babylon meshes are repositioned each frame so the
+//  camera is always at render-space origin (0,0,0).
+// ═══════════════════════════════════════════════════════
+const Universe = {
+  playerPos : new BABYLON.Vector3(0, MOON_RADIUS + PLAYER_HEIGHT, 0),
+  moonCenter: new BABYLON.Vector3(0, 0, 0),
+  // base lives at north pole surface
+  basePos   : new BABYLON.Vector3(0, MOON_RADIUS + BASE_SIZE * 0.3, 0),
+};
+
+function toRender(universePos) {
+  return universePos.subtract(Universe.playerPos);
+}
+
+// ═══════════════════════════════════════════════════════
+//  ENGINE / SCENE
+// ═══════════════════════════════════════════════════════
+const canvas = document.getElementById("renderCanvas");
+const engine = new BABYLON.Engine(canvas, true, { antialias:true });
+const scene  = new BABYLON.Scene(engine);
+scene.clearColor = new BABYLON.Color4(0,0,0,1);
+
+// Camera — we drive it fully ourselves
+const camera = new BABYLON.UniversalCamera("cam", BABYLON.Vector3.Zero(), scene);
+camera.minZ = 0.5;
+camera.maxZ = 120000;
+camera.fov  = 1.08;
+camera.attachControl(canvas, true);
+camera.speed = 0;
+
+// Lighting
+const sun = new BABYLON.DirectionalLight("sun", new BABYLON.Vector3(-0.8, -0.3, 0.5), scene);
+sun.intensity = 2.8;
+sun.diffuse   = new BABYLON.Color3(1.0, 0.97, 0.90);
+
+const amb = new BABYLON.HemisphericLight("amb", new BABYLON.Vector3(0,1,0), scene);
+amb.intensity   = 0.55;
+amb.diffuse     = new BABYLON.Color3(0.55, 0.65, 0.95);
+amb.groundColor = new BABYLON.Color3(0.15, 0.15, 0.20);
+
+// Fog / atmosphere
+scene.fogMode    = BABYLON.Scene.FOGMODE_EXP2;
+scene.fogColor   = new BABYLON.Color3(0.04, 0.06, 0.10);
+scene.fogDensity = 0.000055;
+
+// ═══════════════════════════════════════════════════════
+//  TERRAIN HEIGHT  (single source of truth)
+//
+//  terrainHeight(planetSeed, nx, ny, nz) → meters above MOON_RADIUS
+//
+//  Input:  unit vector on planet surface (surface normal)
+//  Output: height delta in metres — add to MOON_RADIUS for world radius
+//
+//  Uses seeded 3D value noise with a permutation table derived
+//  entirely from integer arithmetic — no Math.sin, no Math.random.
+//  Bit-identical across V8, SpiderMonkey, JavaScriptCore.
+// ═══════════════════════════════════════════════════════
+
+const Terrain = (() => {
+
+  // ── Permutation table (256 entries, shuffled by seed) ──────────────
+  // We keep ONE table per active planetSeed. Re-build only when seed changes.
+  let _cachedSeed = null;
+  let _perm = new Uint8Array(512);
+
+  function _buildPerm(seed) {
+    if (seed === _cachedSeed) return;
+    _cachedSeed = seed;
+
+    // Fill 0..255 then Fisher-Yates using mulberry32
+    const rng = mulberry32(seed);
+    const p = new Uint8Array(256);
+    for (let i = 0; i < 256; i++) p[i] = i;
+    for (let i = 255; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      const tmp = p[i]; p[i] = p[j]; p[j] = tmp;
+    }
+    // Double the table so we never need & 255 on the high half
+    for (let i = 0; i < 512; i++) _perm[i] = p[i & 255];
+  }
+
+  // ── Smooth interpolation ────────────────────────────────────────────
+  function _fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+
+  function _lerp(a, b, t) { return a + t * (b - a); }
+
+  // ── 3-D value noise, returns [-1, 1] ────────────────────────────────
+  // Lattice corners hold pseudo-random gradient scalars derived from
+  // the permutation table. No trig, no division in the inner loop.
+  function _noise3(x, y, z) {
+    const xi = Math.floor(x) & 255;
+    const yi = Math.floor(y) & 255;
+    const zi = Math.floor(z) & 255;
+    const xf = x - Math.floor(x);
+    const yf = y - Math.floor(y);
+    const zf = z - Math.floor(z);
+
+    const u = _fade(xf), v = _fade(yf), w = _fade(zf);
+
+    // Hash corners
+    const A  = _perm[xi]   + yi, AA = _perm[A]   + zi, AB = _perm[A+1] + zi;
+    const B  = _perm[xi+1] + yi, BA = _perm[B]   + zi, BB = _perm[B+1] + zi;
+
+    // Convert hash to [-1,1] scalar via bit ops (fast, deterministic)
+    function g(h) { return ((_perm[h] & 255) / 127.5) - 1.0; }
+
+    return _lerp(
+      _lerp(_lerp(g(AA),   g(BA),   u), _lerp(g(AB),   g(BB),   u), v),
+      _lerp(_lerp(g(AA+1), g(BA+1), u), _lerp(g(AB+1), g(BB+1), u), v),
+      w
+    );
+  }
+
+  // ── Public API ───────────────────────────────────────────────────────
+
+  /**
+   * terrainHeight(planetSeed, nx, ny, nz) → metres
+   *
+   * nx/ny/nz : components of a unit vector on the planet surface.
+   *            Sampling on the unit sphere means face seams come for free —
+   *            there is no cube-face discontinuity.
+   *
+   * Called by: mesh vertex displacement, collision, shading. One function.
+   */
+  function terrainHeight(planetSeed, nx, ny, nz) {
+    _buildPerm(planetSeed);
+
+    // Scale the unit sphere up so noise features are at terrain scale.
+    // FREQ controls the "zoom" — lower = bigger continents, higher = more detail.
+    const FREQ0   = 2.1;
+    const OCTAVES = 5;
+    const PERSIST = 0.52;   // amplitude multiplier per octave
+    const LACUN   = 2.03;   // frequency multiplier per octave
+    const SCALE   = 420;    // total height range ± metres
+
+    let h    = 0;
+    let amp  = 1.0;
+    let freq = FREQ0;
+    let norm = 0;           // track max possible amplitude for normalisation
+
+    for (let o = 0; o < OCTAVES; o++) {
+      h    += amp * _noise3(nx * freq, ny * freq, nz * freq);
+      norm += amp;
+      amp  *= PERSIST;
+      freq *= LACUN;
+    }
+
+    return (h / norm) * SCALE;  // result in (-SCALE, +SCALE) metres
+  }
+
+  /**
+   * debugSampleDump(planetSeed)
+   *
+   * Samples 32 deterministic points and prints a checksum.
+   * Open ?debug=1 in the URL to run this. Compare output
+   * across Chrome / Firefox / Safari — all three must match exactly.
+   */
+  function debugSampleDump(planetSeed) {
+    const rng = mulberry32(planetSeed ^ 0xABCD1234);
+    let checksum = 0;
+    const lines = [];
+
+    for (let i = 0; i < 32; i++) {
+      // Random unit vector via spherical coords
+      const phi = Math.acos(2 * rng() - 1);
+      const tht = 2 * Math.PI * rng();
+      const nx  = Math.sin(phi) * Math.cos(tht);
+      const ny  = Math.sin(phi) * Math.sin(tht);
+      const nz  = Math.cos(phi);
+
+      const h = terrainHeight(planetSeed, nx, ny, nz);
+      // Accumulate integer checksum (multiply-add, stays in int32 range)
+      checksum = (Math.imul(checksum, 31) + Math.round(h * 1000)) | 0;
+      if (i < 8) lines.push(`  [${i}] n=(${nx.toFixed(4)}, ${ny.toFixed(4)}, ${nz.toFixed(4)})  h=${h.toFixed(4)} m`);
+    }
+
+    console.group("terrainHeight debug dump — seed 0x" + planetSeed.toString(16).toUpperCase());
+    lines.forEach(l => console.log(l));
+    console.log(`  ... (32 samples total)`);
+    console.log(`  CHECKSUM: ${checksum} (must be identical across all browsers)`);
+    console.groupEnd();
+  }
+
+  return { terrainHeight, debugSampleDump };
+})();
+
+// Convenience alias used by collision + mesh
+const PLANET_SEED = 0xC0FFEE42;
+const terrainHeight = (nx, ny, nz) => Terrain.terrainHeight(PLANET_SEED, nx, ny, nz);
+
+// Run debug dump when ?debug=1
+if (new URLSearchParams(window.location.search).get("debug") === "1") {
+  // Defer until after scene init so console isn't flooded at startup
+  setTimeout(() => Terrain.debugSampleDump(PLANET_SEED), 500);
+}
+
+// ═══════════════════════════════════════════════════════
+//  CUBE-TO-SPHERE PROJECTION
+//
+//  6 faces. Basis (u,v,n) chosen so cross(u,v)=n on every
+//  face → consistent CCW winding → correct lighting on all faces.
+//  Nowell uniform sphere mapping keeps triangle area even.
+//
+//  Face ids:  0=+Y  1=-Y  2=+X  3=-X  4=+Z  5=-Z
+// ═══════════════════════════════════════════════════════
+
+const CubeSphere = (() => {
+
+  // Verified: cross(u,v) == n for each row
+  //   cross([ax,ay,az],[bx,by,bz]) = [ay*bz-az*by, az*bx-ax*bz, ax*by-ay*bx]
+  const FACES = [
+    { u:[1,0,0],  v:[0,0,-1], n:[0, 1, 0] },  // 0  +Y  cross(+X,-Z)=(0,1,0) ✓
+    { u:[1,0,0],  v:[0,0, 1], n:[0,-1, 0] },  // 1  -Y  cross(+X,+Z)=(0,-1,0) ✓
+    { u:[0,0,-1], v:[0,1, 0], n:[1, 0, 0] },  // 2  +X  cross(-Z,+Y)=(1,0,0) ✓
+    { u:[0,0, 1], v:[0,1, 0], n:[-1,0, 0] },  // 3  -X  cross(+Z,+Y)=(-1,0,0) ✓
+    { u:[1,0,0],  v:[0,1, 0], n:[0, 0, 1] },  // 4  +Z  cross(+X,+Y)=(0,0,1) ✓
+    { u:[-1,0,0], v:[0,1, 0], n:[0, 0,-1] },  // 5  -Z  cross(-X,+Y)=(0,0,-1) ✓
+  ];
+
+  function cubeToSphereV3(faceId, u, v, outV3) {
+    const f  = FACES[faceId];
+    const cx = f.u[0]*u + f.v[0]*v + f.n[0];
+    const cy = f.u[1]*u + f.v[1]*v + f.n[1];
+    const cz = f.u[2]*u + f.v[2]*v + f.n[2];
+    const cx2 = cx*cx, cy2 = cy*cy, cz2 = cz*cz;
+    outV3.x = cx * Math.sqrt(Math.max(0, 1 - cy2/2 - cz2/2 + cy2*cz2/3));
+    outV3.y = cy * Math.sqrt(Math.max(0, 1 - cz2/2 - cx2/2 + cz2*cx2/3));
+    outV3.z = cz * Math.sqrt(Math.max(0, 1 - cx2/2 - cy2/2 + cx2*cy2/3));
+    return outV3;
+  }
+
+  function cubeToSphere(faceId, u, v, out) {
+    if (!out) out = {};
+    const f  = FACES[faceId];
+    const cx = f.u[0]*u + f.v[0]*v + f.n[0];
+    const cy = f.u[1]*u + f.v[1]*v + f.n[1];
+    const cz = f.u[2]*u + f.v[2]*v + f.n[2];
+    const cx2 = cx*cx, cy2 = cy*cy, cz2 = cz*cz;
+    out.x = cx * Math.sqrt(Math.max(0, 1 - cy2/2 - cz2/2 + cy2*cz2/3));
+    out.y = cy * Math.sqrt(Math.max(0, 1 - cz2/2 - cx2/2 + cz2*cx2/3));
+    out.z = cz * Math.sqrt(Math.max(0, 1 - cx2/2 - cy2/2 + cx2*cy2/3));
+    return out;
+  }
+
+  return { cubeToSphere, cubeToSphereV3, FACES };
+})();
+
+// ═══════════════════════════════════════════════════════
+//  QUADSPHERE TERRAIN  (tasks 1.3 + 1.4 + 1.6)
+//
+//  Each of the 6 cube faces is a quadtree of patches.
+//  Patches split when the player is close; merge when far.
+//  Every patch is an independent top-level Babylon Mesh so
+//  the floating-origin rebase is per-patch, not per-planet.
+// ═══════════════════════════════════════════════════════
+
+// Shared material for every patch
+const moonMat = new BABYLON.StandardMaterial("moonMat", scene);
+moonMat.diffuseColor        = new BABYLON.Color3(0.50, 0.48, 0.46);
+moonMat.specularColor       = new BABYLON.Color3(0.04, 0.04, 0.04);
+moonMat.vertexColorsEnabled = true;
+moonMat.backFaceCulling     = false;
+
+// ── Constants ─────────────────────────────────────────
+const PATCH_VERTS  = 17;      // 16x16 quads per patch (power-of-2 + 1)
+const MAX_LOD      = 8;       // deepest split level
+const SPLIT_K      = 2.2;     // split when dist < K * patchWorldSize
+const MERGE_HYST   = 1.35;    // merge when dist > splitDist * MERGE_HYST
+const SKIRT_DROP   = 0;       // metres — skirts disabled; overlap strategy used instead
+
+// Scratch Vector3 reused across all patch builds — zero allocation in hot path
+const _pv = new BABYLON.Vector3();
+
+// ── Patch object pool ──────────────────────────────────
+// We reuse Babylon Mesh objects to avoid GC spikes from dispose().
+const _meshPool = [];
+function _acquireMesh(name) {
+  if (_meshPool.length > 0) {
+    const m = _meshPool.pop();
+    m.name = name;
+    m.setEnabled(true);
+    return m;
+  }
+  const m = new BABYLON.Mesh(name, scene);
+  m.material   = moonMat;
+  m.isPickable = false;
+  return m;
+}
+function _releaseMesh(m) {
+  m.setEnabled(false);
+  _meshPool.push(m);
+}
+
+// ── Patch data structure ───────────────────────────────
+// A Patch knows its face, LOD level, integer grid position,
+// its universe-space centre (for rebasing and split distance),
+// and whether it currently has live children.
+
+function makePatch(faceId, lod, gx, gy) {
+  // Face-local u,v extent of this patch in [-1,1] space
+  const count  = Math.pow(2, lod);   // patches per side at this LOD
+  const size   = 2 / count;          // face-local side length
+  // Overlap: extend each patch by a fraction of its size on all sides.
+  // Adjacent patches overdraw slightly — eliminates inter-patch gaps
+  // without needing cross-face vertex sharing.
+  const OVERLAP = 0.02;
+  const uMin   = -1 + gx * size - size * OVERLAP;
+  const vMin   = -1 + gy * size - size * OVERLAP;
+  const uMax   = -1 + gx * size + size + size * OVERLAP;
+  const vMax   = -1 + gy * size + size + size * OVERLAP;
+  const uMid   = (uMin + uMax) * 0.5;
+  const vMid   = (vMin + vMax) * 0.5;
+
+  // Universe-space centre: sphere-project the face-local midpoint, scale to radius
+  CubeSphere.cubeToSphereV3(faceId, uMid, vMid, _pv);
+  const h = terrainHeight(_pv.x, _pv.y, _pv.z);
+  const r = MOON_RADIUS + h;
+
+  // patchWorldSize = arc length of one edge at this LOD (approximate, good enough for split test)
+  const patchWorldSize = (size / 2) * MOON_RADIUS * Math.PI;
+
+  return {
+    faceId, lod, gx, gy,
+    uMin, vMin, uMax, vMax,
+    // Universe-space centre (Vector3, allocated once per patch lifetime)
+    uCenter: new BABYLON.Vector3(
+      Universe.moonCenter.x + _pv.x * r,
+      Universe.moonCenter.y + _pv.y * r,
+      Universe.moonCenter.z + _pv.z * r
+    ),
+    patchWorldSize,
+    mesh    : null,    // Babylon Mesh, null when this patch has live children
+    children: null,    // array of 4 child patches, null when leaf
+  };
+}
+
+// ── Build geometry for one patch ──────────────────────
+function buildPatchMesh(patch) {
+  const V    = PATCH_VERTS;
+  const V1   = V - 1;
+  // Extra row/col per edge for skirt: total (V+2) x (V+2) but we use a
+  // simple flat skirt — just duplicate edge verts offset inward/downward.
+  // Simpler: V x V terrain + 4 * V skirt quads.
+  const terrainVerts = V * V;
+  const skirtVerts   = 4 * V;          // one strip per edge
+  const totalVerts   = terrainVerts + skirtVerts;
+  const terrainQuads = V1 * V1;
+  const skirtQuads   = 4 * V1;
+  const totalQuads   = terrainQuads + skirtQuads;
+
+  const positions = new Float32Array(totalVerts * 3);
+  const normals   = new Float32Array(totalVerts * 3);
+  const colors    = new Float32Array(totalVerts * 4);
+  const indices   = new Uint32Array(totalQuads * 6);
+
+  const { uMin, vMin, uMax, vMax, faceId } = patch;
+
+  // ── Terrain grid vertices ──
+  for (let row = 0; row < V; row++) {
+    for (let col = 0; col < V; col++) {
+      const u = uMin + (col / V1) * (uMax - uMin);
+      const v = vMin + (row / V1) * (vMax - vMin);
+
+      CubeSphere.cubeToSphereV3(faceId, u, v, _pv);
+      const h = terrainHeight(_pv.x, _pv.y, _pv.z);
+      const r = MOON_RADIUS + h;
+
+      const vi = (row * V + col) * 3;
+      positions[vi]   = _pv.x * r;
+      positions[vi+1] = _pv.y * r;
+      positions[vi+2] = _pv.z * r;
+      normals[vi]     = _pv.x;
+      normals[vi+1]   = _pv.y;
+      normals[vi+2]   = _pv.z;
+
+      const ci  = (row * V + col) * 4;
+      const ht  = (h + 420) / 840;
+      const lum = 0.38 + ht * 0.28;
+      colors[ci]   = lum;
+      colors[ci+1] = lum * 0.97;
+      colors[ci+2] = lum * 0.93;
+      colors[ci+3] = 1;
+    }
+  }
+
+  // ── Skirt vertices (4 edges: bottom, top, left, right) ──
+  // Each skirt vert is a copy of the matching edge vert, pulled
+  // inward along the surface normal by SKIRT_DROP metres.
+  let sv = terrainVerts;
+  function addSkirtVert(edgeVertIdx) {
+    const ei = edgeVertIdx * 3;
+    const nx = normals[ei], ny = normals[ei+1], nz = normals[ei+2];
+    const px = positions[ei], py = positions[ei+1], pz = positions[ei+2];
+    const si = sv * 3;
+    positions[si]   = px - nx * SKIRT_DROP;
+    positions[si+1] = py - ny * SKIRT_DROP;
+    positions[si+2] = pz - nz * SKIRT_DROP;
+    normals[si]   = nx; normals[si+1] = ny; normals[si+2] = nz;
+    const ci = sv * 4;
+    const oi = edgeVertIdx * 4;
+    colors[ci]   = colors[oi]   * 0.7;
+    colors[ci+1] = colors[oi+1] * 0.7;
+    colors[ci+2] = colors[oi+2] * 0.7;
+    colors[ci+3] = 1;
+    sv++;
+  }
+  // bottom edge (row=0)
+  const skirtBottom = terrainVerts;
+  for (let col = 0; col < V; col++) addSkirtVert(col);
+  // top edge (row=V-1)
+  const skirtTop = sv;
+  for (let col = 0; col < V; col++) addSkirtVert((V - 1) * V + col);
+  // left edge (col=0)
+  const skirtLeft = sv;
+  for (let row = 0; row < V; row++) addSkirtVert(row * V);
+  // right edge (col=V-1)
+  const skirtRight = sv;
+  for (let row = 0; row < V; row++) addSkirtVert(row * V + V - 1);
+
+  // ── Terrain indices ──
+  let ii = 0;
+  for (let row = 0; row < V1; row++) {
+    for (let col = 0; col < V1; col++) {
+      const a = row * V + col;
+      const b = a + 1;
+      const c = a + V;
+      const d = c + 1;
+      indices[ii++]=a; indices[ii++]=c; indices[ii++]=b;
+      indices[ii++]=b; indices[ii++]=c; indices[ii++]=d;
+    }
+  }
+
+  // ── Skirt indices ──
+  function addSkirtQuad(edgeA, edgeB, skirtA, skirtB) {
+    indices[ii++]=edgeA;  indices[ii++]=skirtA; indices[ii++]=edgeB;
+    indices[ii++]=edgeB;  indices[ii++]=skirtA; indices[ii++]=skirtB;
+  }
+  for (let col = 0; col < V1; col++) {
+    addSkirtQuad(col, col+1, skirtBottom+col, skirtBottom+col+1);
+  }
+  for (let col = 0; col < V1; col++) {
+    const eA = (V-1)*V+col, eB = eA+1;
+    addSkirtQuad(eA, eB, skirtTop+col, skirtTop+col+1);
+  }
+  for (let row = 0; row < V1; row++) {
+    const eA = row*V, eB = (row+1)*V;
+    addSkirtQuad(eA, eB, skirtLeft+row, skirtLeft+row+1);
+  }
+  for (let row = 0; row < V1; row++) {
+    const eA = row*V+V-1, eB = (row+1)*V+V-1;
+    addSkirtQuad(eA, eB, skirtRight+row, skirtRight+row+1);
+  }
+
+  // ── Recompute normals from actual geometry ──
+  // This handles terrain bumps correctly and also detects any winding issues.
+  BABYLON.VertexData.ComputeNormals(positions, indices, normals);
+
+  // ── Upload to GPU ──
+  const m  = _acquireMesh("patch_f"+faceId+"_l"+patch.lod+"_"+patch.gx+"_"+patch.gy);
+  const vd = new BABYLON.VertexData();
+  vd.positions = positions;
+  vd.normals   = normals;
+  vd.colors    = colors;
+  vd.indices   = indices;
+  vd.applyToMesh(m, false);
+  patch.mesh = m;
+}
+
+// ── Quadtree update ───────────────────────────────────
+// Walk from root; split leaves that are too close, merge
+// siblings that are all too far.  Called once per frame.
+
+function _splitDist(patchWorldSize) {
+  return patchWorldSize * SPLIT_K;
+}
+function _mergeDist(patchWorldSize) {
+  return _splitDist(patchWorldSize) * MERGE_HYST;
+}
+
+// Distance from player to closest point on patch surface (approximate:
+// use distance to patch centre — good enough given hysteresis).
+function _patchDist(patch) {
+  const cx = Universe.playerPos.x - patch.uCenter.x;
+  const cy = Universe.playerPos.y - patch.uCenter.y;
+  const cz = Universe.playerPos.z - patch.uCenter.z;
+  return Math.sqrt(cx*cx + cy*cy + cz*cz);
+}
+
+// Max mesh builds allowed per frame — prevents cascade stalls on approach
+const MAX_BUILDS_PER_FRAME = 2;
+let _buildsThisFrame = 0;
+
+function _splitPatch(patch) {
+  if (patch.lod >= MAX_LOD) return;
+  if (patch.mesh) { _releaseMesh(patch.mesh); patch.mesh = null; }
+  const cl = patch.lod + 1;
+  const cgx = patch.gx * 2;
+  const cgy = patch.gy * 2;
+  patch.children = [
+    makePatch(patch.faceId, cl, cgx,   cgy),
+    makePatch(patch.faceId, cl, cgx+1, cgy),
+    makePatch(patch.faceId, cl, cgx,   cgy+1),
+    makePatch(patch.faceId, cl, cgx+1, cgy+1),
+  ];
+  for (const c of patch.children) {
+    buildPatchMesh(c);
+    _buildsThisFrame++;
+  }
+}
+
+function _mergePatch(patch) {
+  if (!patch.children) return;
+  for (const c of patch.children) {
+    if (c.children) _mergePatch(c);
+    if (c.mesh) { _releaseMesh(c.mesh); c.mesh = null; }
+  }
+  patch.children = null;
+  buildPatchMesh(patch);
+  _buildsThisFrame++;
+}
+
+function _updatePatchTree(patch) {
+  // Hard budget: never build more than MAX_BUILDS_PER_FRAME meshes in one tick
+  if (_buildsThisFrame >= MAX_BUILDS_PER_FRAME) return;
+
+  const dist = _patchDist(patch);
+
+  if (!patch.children) {
+    if (patch.lod < MAX_LOD && dist < _splitDist(patch.patchWorldSize)) {
+      _splitPatch(patch);
+    }
+    return;
+  }
+
+  let allFar = true;
+  for (const c of patch.children) {
+    if (_patchDist(c) < _mergeDist(c.patchWorldSize)) { allFar = false; break; }
+  }
+  if (allFar) {
+    _mergePatch(patch);
+    return;
+  }
+
+  for (const c of patch.children) _updatePatchTree(c);
+}
+
+// ── Rebase all active patch meshes ────────────────────
+// Geometry is built in moon-local space (verts are relative to moonCenter),
+// so every patch mesh simply sits at moonCenter - playerPos.
+const _moonRenderPos = new BABYLON.Vector3();
+function _rebasePatchTree(patch) {
+  if (patch.mesh) {
+    patch.mesh.position.copyFrom(_moonRenderPos);
+  }
+  if (patch.children) {
+    for (const c of patch.children) _rebasePatchTree(c);
+  }
+}
+
+// ── Count active patches (for debug HUD) ──────────────
+function _countPatches(patch) {
+  if (!patch.children) return patch.mesh ? 1 : 0;
+  let n = 0;
+  for (const c of patch.children) n += _countPatches(c);
+  return n;
+}
+
+// ── Root patches: one per cube face ───────────────────
+const quadRoots = [];
+for (let f = 0; f < 6; f++) {
+  const root = makePatch(f, 0, 0, 0);
+  buildPatchMesh(root);
+  quadRoots.push(root);
+}
+
+// Public helpers used by game loop + HUD
+function updateQuadtree() {
+  _buildsThisFrame = 0;
+  for (const r of quadRoots) _updatePatchTree(r);
+}
+function rebaseQuadtree() {
+  _moonRenderPos.x = Universe.moonCenter.x - Universe.playerPos.x;
+  _moonRenderPos.y = Universe.moonCenter.y - Universe.playerPos.y;
+  _moonRenderPos.z = Universe.moonCenter.z - Universe.playerPos.z;
+  for (const r of quadRoots) _rebasePatchTree(r);
+}
+function activePatchCount() {
+  let n = 0;
+  for (const r of quadRoots) n += _countPatches(r);
+  return n;
+}
+
+// Legacy shim — nothing else references moon.position now
+// but keep it to avoid a ReferenceError if something slipped through.
+const moon = { position: new BABYLON.Vector3() };
+
+// ═══════════════════════════════════════════════════════
+//  BASE STRUCTURE  (aligned to surface normal)
+// ═══════════════════════════════════════════════════════
+const baseUp    = new BABYLON.Vector3(0, 1, 0);   // north-pole surface normal
+const baseRight = BABYLON.Vector3.Cross(baseUp, new BABYLON.Vector3(1, 0, 0.001)).normalize();
+const baseFwd   = BABYLON.Vector3.Cross(baseRight, baseUp).normalize();
+const baseQuat  = BABYLON.Quaternion.RotationQuaternionFromAxis(baseRight, baseUp, baseFwd);
+
+const baseBody = BABYLON.MeshBuilder.CreateBox("base",
+  { width: BASE_SIZE, height: BASE_SIZE * 0.55, depth: BASE_SIZE * 1.4 }, scene);
+const baseBodyMat = new BABYLON.StandardMaterial("baseMat", scene);
+baseBodyMat.diffuseColor  = new BABYLON.Color3(0.52, 0.50, 0.44);
+baseBodyMat.specularColor = new BABYLON.Color3(0.08,0.08,0.08);
+baseBody.material = baseBodyMat;
+baseBody.rotationQuaternion = baseQuat.clone();
+
+const pad = BABYLON.MeshBuilder.CreateCylinder("pad",
+  { diameter: BASE_SIZE * 0.65, height: 1.8, tessellation: 18 }, scene);
+const padMat = new BABYLON.StandardMaterial("padMat", scene);
+padMat.diffuseColor = new BABYLON.Color3(0.28, 0.32, 0.28);
+pad.material = padMat;
+pad.rotationQuaternion = baseQuat.clone();
+
+// Antenna
+const ant = BABYLON.MeshBuilder.CreateCylinder("ant",
+  { diameter: 0.8, height: BASE_SIZE * 0.8, tessellation: 6 }, scene);
+const antMat = new BABYLON.StandardMaterial("antMat", scene);
+antMat.diffuseColor  = new BABYLON.Color3(0.6, 0.58, 0.5);
+antMat.emissiveColor = new BABYLON.Color3(0.05, 0.05, 0.05);
+ant.material = antMat;
+ant.rotationQuaternion = baseQuat.clone();
+
+// ═══════════════════════════════════════════════════════
+//  STARFIELD  — Frontier style
+//
+//  Stars live on a sphere parented to a "sky node" that
+//  tracks camera ROTATION only (not position).
+//  Result: true parallax-free infinity — stars never move
+//  no matter how far you fly.
+//
+//  Distribution follows Frontier's palette:
+//    60% faint white/grey dwarfs   (tiny)
+//    25% yellow/white main seq     (medium)
+//    10% hot blue-white            (medium, bright)
+//     5% cool orange/red giants    (slightly larger)
+// ═══════════════════════════════════════════════════════
+const SKY_R = 90000; // large enough to always be behind everything
+
+// Sky root — we copy camera rotation to this every frame
+const skyNode = new BABYLON.TransformNode("skyNode", scene);
+
+const skySPS = new BABYLON.SolidParticleSystem("skySPS", scene, { isPickable:false });
+const skyQuad = BABYLON.MeshBuilder.CreatePlane("sq", { size:1 }, scene);
+skySPS.addShape(skyQuad, 7000);
+skyQuad.dispose();
+const skyMesh = skySPS.buildMesh();
+skyMesh.parent = skyNode;
+
+const skyMat = new BABYLON.StandardMaterial("skyMat", scene);
+skyMat.emissiveColor   = new BABYLON.Color3(1,1,1);
+skyMat.disableLighting = true;
+skyMat.backFaceCulling = false;
+skyMesh.material = skyMat;
+skyMesh.isPickable = false;
+
+// Stellar colour palette (r,g,b brightness tuples)
+const starPalette = [
+  // faint white dwarfs / distant stars
+  [0.88, 0.88, 0.92], [0.82, 0.82, 0.86], [0.78, 0.78, 0.82],
+  [0.72, 0.72, 0.76], [0.68, 0.68, 0.72],
+  // yellow-white main sequence
+  [1.00, 0.97, 0.82], [0.98, 0.95, 0.76], [1.00, 1.00, 0.92],
+  // hot blue-white
+  [0.88, 0.94, 1.00], [0.78, 0.88, 1.00], [0.94, 0.97, 1.00],
+  // cool orange-red giants
+  [1.00, 0.78, 0.42], [1.00, 0.65, 0.32], [1.00, 0.85, 0.55],
+];
+
+// Seeded RNG so starfield is deterministic every load
+function mulberry32(seed) {
+  return function() {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+const rng = mulberry32(0xDEADBEEF);
+
+skySPS.initParticles = () => {
+  for (let i = 0; i < skySPS.nbParticles; i++) {
+    const p   = skySPS.particles[i];
+
+    // Uniform sphere distribution
+    const phi = Math.acos(2 * rng() - 1);
+    const tht = 2 * Math.PI * rng();
+    p.position.set(
+      SKY_R * Math.sin(phi) * Math.cos(tht),
+      SKY_R * Math.sin(phi) * Math.sin(tht),
+      SKY_R * Math.cos(phi)
+    );
+
+    // Star class by index bands
+    const roll = rng();
+    let sz, colIdx;
+    if (roll < 0.60) {
+      // Faint dwarfs
+      sz = 32 + rng() * 38;
+      colIdx = Math.floor(rng() * 5);
+    } else if (roll < 0.85) {
+      // Yellow-white main seq
+      sz = 55 + rng() * 60;
+      colIdx = 5 + Math.floor(rng() * 3);
+    } else if (roll < 0.95) {
+      // Blue-white hot
+      sz = 65 + rng() * 70;
+      colIdx = 8 + Math.floor(rng() * 3);
+    } else {
+      // Orange-red giants
+      sz = 90 + rng() * 90;
+      colIdx = 11 + Math.floor(rng() * 3);
+    }
+
+    p.scale.set(sz, sz, sz);
+    const [r, g, b] = starPalette[colIdx];
+    const bv = 0.88 + rng() * 0.12;
+    p.color = new BABYLON.Color4(r * bv, g * bv, b * bv, 1);
+  }
+};
+skySPS.initParticles();
+skySPS.setParticles();
+skySPS.computeParticleColor    = false;
+skySPS.computeParticleTexture  = false;
+skySPS.computeParticleRotation = false;
+
+// ═══════════════════════════════════════════════════════
+//  SUN  — bright disc + soft corona rings + directional light
+//
+//  Sun direction in universe space (unit vector toward sun)
+//  We place it far away so it's always at "infinity" like stars.
+// ═══════════════════════════════════════════════════════
+const SUN_DIR = new BABYLON.Vector3(0.72, 0.35, -0.58).normalize();
+const SUN_SKY_POS = SUN_DIR.scale(SKY_R * 0.95);
+
+// ── Sun appearance — tweak these ──────────────────────
+const SUN_DISC_SIZE  = 7800;   // radius of the hard white disc (world units at SKY_R)
+const SUN_GLOW1_SIZE = 6800;   // inner glow ring
+const SUN_GLOW2_SIZE = 9000;   // outer corona haze
+const SUN_COLOR      = new BABYLON.Color3(1.0, 0.97, 0.88);   // disc colour
+const SUN_GLOW1_COL  = new BABYLON.Color3(0.55, 0.42, 0.12);  // inner glow tint
+const SUN_GLOW2_COL  = new BABYLON.Color3(0.30, 0.20, 0.06);  // outer haze tint
+// ─────────────────────────────────────────────────────
+
+// Build a circular disc texture via canvas so the sun isn't a square
+function makeSunTexture(innerAlpha, outerAlpha, resolution) {
+  const size = resolution || 128;
+  const cvs  = document.createElement("canvas");
+  cvs.width = cvs.height = size;
+  const ctx  = cvs.getContext("2d");
+  const half = size / 2;
+  const grad = ctx.createRadialGradient(half, half, 0, half, half, half);
+  grad.addColorStop(0,   `rgba(255,255,255,${innerAlpha})`);
+  grad.addColorStop(0.45,`rgba(255,255,255,${innerAlpha})`);
+  grad.addColorStop(1,   `rgba(255,255,255,${outerAlpha})`);
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(half, half, half, 0, Math.PI * 2);
+  ctx.fill();
+  const tex = new BABYLON.DynamicTexture("sunTex_" + innerAlpha, { width: size, height: size }, scene, false);
+  tex.getContext().drawImage(cvs, 0, 0);
+  tex.update();
+  return tex;
+}
+
+// Core disc — sharp circle
+const sunDisc = BABYLON.MeshBuilder.CreatePlane("sunDisc", { size: SUN_DISC_SIZE }, scene);
+sunDisc.parent = skyNode;
+sunDisc.position.copyFrom(SUN_SKY_POS);
+sunDisc.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL;
+const sunMat = new BABYLON.StandardMaterial("sunMat", scene);
+sunMat.emissiveColor    = SUN_COLOR;
+sunMat.disableLighting  = true;
+sunMat.backFaceCulling  = false;
+sunMat.opacityTexture   = makeSunTexture(1, 0, 256);
+sunMat.emissiveTexture  = makeSunTexture(1, 0, 256);
+sunDisc.material = sunMat;
+sunDisc.isPickable = false;
+sunDisc.renderingGroupId = 0;
+
+// Inner glow
+const sunGlow1 = BABYLON.MeshBuilder.CreatePlane("sunGlow1", { size: SUN_GLOW1_SIZE }, scene);
+sunGlow1.parent = skyNode;
+sunGlow1.position.copyFrom(SUN_SKY_POS);
+sunGlow1.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL;
+const sunGlow1Mat = new BABYLON.StandardMaterial("sunGlow1Mat", scene);
+sunGlow1Mat.emissiveColor   = SUN_GLOW1_COL;
+sunGlow1Mat.disableLighting = true;
+sunGlow1Mat.backFaceCulling = false;
+sunGlow1Mat.opacityTexture  = makeSunTexture(0.28, 0, 128);
+sunGlow1.material = sunGlow1Mat;
+sunGlow1.isPickable = false;
+
+// Outer corona
+const sunGlow2 = BABYLON.MeshBuilder.CreatePlane("sunGlow2", { size: SUN_GLOW2_SIZE }, scene);
+sunGlow2.parent = skyNode;
+sunGlow2.position.copyFrom(SUN_SKY_POS);
+sunGlow2.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL;
+const sunGlow2Mat = new BABYLON.StandardMaterial("sunGlow2Mat", scene);
+sunGlow2Mat.emissiveColor   = SUN_GLOW2_COL;
+sunGlow2Mat.disableLighting = true;
+sunGlow2Mat.backFaceCulling = false;
+sunGlow2Mat.opacityTexture  = makeSunTexture(0.10, 0, 128);
+sunGlow2.material = sunGlow2Mat;
+sunGlow2.isPickable = false;
+
+// Align directional light to sun direction
+sun.direction.copyFrom(SUN_DIR.scale(-1));
+
+// ═══════════════════════════════════════════════════════
+//  DISTANT PLANET  (visual only)
+// ═══════════════════════════════════════════════════════
+const planet = BABYLON.MeshBuilder.CreateSphere("planet", { diameter:9000, segments:20 }, scene);
+planet.position = new BABYLON.Vector3(45000, 18000, -65000);
+const planetMat = new BABYLON.StandardMaterial("planetMat", scene);
+planetMat.diffuseColor  = new BABYLON.Color3(0.18, 0.32, 0.62);
+planetMat.specularColor = new BABYLON.Color3(0.04, 0.04, 0.1);
+planet.material = planetMat;
+planet.isPickable = false;
+
+// ═══════════════════════════════════════════════════════
+//  PLAYER STATE
+// ═══════════════════════════════════════════════════════
+const player = {
+  velocity     : new BABYLON.Vector3(0,0,0),
+  surfaceNormal: new BABYLON.Vector3(0,1,0),
+  altitude     : PLAYER_HEIGHT,
+  state        : STATE.SURFACE,
+};
+
+// ═══════════════════════════════════════════════════════
+//  INPUT
+// ═══════════════════════════════════════════════════════
+const keys = {};
+window.addEventListener("keydown", e => {
+  if (e.target.tagName === "INPUT") return;  // let splash input type freely
+  keys[e.code] = true;
+  e.preventDefault();
+});
+window.addEventListener("keyup", e => {
+  if (e.target.tagName === "INPUT") return;
+  keys[e.code] = false;
+});
+
+let pointerLocked = false;
+canvas.addEventListener("click", () => { if (!pointerLocked) canvas.requestPointerLock(); });
+document.addEventListener("pointerlockchange", () => {
+  pointerLocked = document.pointerLockElement === canvas;
+  document.getElementById("clickHint").style.opacity = pointerLocked ? "0" : "0.5";
+});
+
+// ═══════════════════════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════════════════════
+function smoothstep(lo, hi, x) {
+  const t = Math.max(0, Math.min(1, (x-lo)/(hi-lo)));
+  return t*t*(3-2*t);
+}
+
+// ═══════════════════════════════════════════════════════
+//  PHYSICS
+// ═══════════════════════════════════════════════════════
+function physicsUpdate(dt) {
+  // ── Surface data ──
+  const toPlayer = Universe.playerPos.subtract(Universe.moonCenter);
+  const distFromCenter = toPlayer.length();
+  player.surfaceNormal = toPlayer.normalize();
+  player.altitude = distFromCenter - MOON_RADIUS;
+  const up = player.surfaceNormal;
+
+  // ── Gravity ──
+  const gravBlend    = 1 - smoothstep(0, SPACE_HEIGHT, player.altitude);
+  const gravStrength = SURFACE_GRAVITY * gravBlend;
+  player.velocity.addInPlace(up.scale(-gravStrength * dt));
+
+  // ── Movement directions (tangent to sphere) ──
+  const camFwd   = camera.getDirection(BABYLON.Axis.Z).normalize();
+  const camRight = camera.getDirection(BABYLON.Axis.X).normalize();
+
+  // Project onto tangent plane
+  const projFwd = camFwd.subtract(
+    up.scale(BABYLON.Vector3.Dot(camFwd, up))
+  );
+  if (projFwd.lengthSquared() > 0.0001) projFwd.normalize();
+
+  const projRight = camRight.subtract(
+    up.scale(BABYLON.Vector3.Dot(camRight, up))
+  );
+  if (projRight.lengthSquared() > 0.0001) projRight.normalize();
+
+  // ── Thrust ──
+  const isSurface = (player.state !== STATE.SPACE);
+  const accel = isSurface ? SURFACE_ACCEL : SPACE_ACCEL;
+  const thrustingVertical = keys["Space"] || keys["ShiftLeft"] || keys["ShiftRight"];
+
+  if (keys["KeyW"]) player.velocity.addInPlace(projFwd.scale( accel*dt));
+  if (keys["KeyS"]) player.velocity.addInPlace(projFwd.scale(-accel*dt));
+  if (keys["KeyA"]) player.velocity.addInPlace(projRight.scale(-accel*dt));
+  if (keys["KeyD"]) player.velocity.addInPlace(projRight.scale( accel*dt));
+  if (keys["Space"])                           player.velocity.addInPlace(up.scale( accel*2.2*dt));
+  if (keys["ShiftLeft"] || keys["ShiftRight"]) player.velocity.addInPlace(up.scale(-accel*dt));
+
+  // ── Damping — tangential and radial treated separately ──
+  // Tangential (horizontal): strong friction on surface, fades away in space
+  // Radial (vertical): very light always — never caps your launch speed
+  // Key rule: skip radial damping entirely while player is actively thrusting vertically
+  const spaceBlend = smoothstep(0, ATMO_HEIGHT, player.altitude);
+
+  const radSpeed = BABYLON.Vector3.Dot(player.velocity, up);
+  const radVel   = up.scale(radSpeed);
+  let   tanVel   = player.velocity.subtract(radVel);
+
+  const tanDamp = DAMP_TANGENT + (1.0 - DAMP_TANGENT) * spaceBlend;
+  tanVel.scaleInPlace(Math.pow(tanDamp, dt * 60));
+
+  if (!thrustingVertical) {
+    const radDamp = DAMP_RADIAL + (1.0 - DAMP_RADIAL) * spaceBlend;
+    radVel.scaleInPlace(Math.pow(radDamp, dt * 60));
+  }
+
+  player.velocity = tanVel.add(radVel);
+
+  // ── Collision: terrain height at player surface normal ──
+  const groundH  = terrainHeight(up.x, up.y, up.z);
+  const groundR  = MOON_RADIUS + groundH + PLAYER_HEIGHT;
+  if (distFromCenter < groundR) {
+    Universe.playerPos.copyFrom(
+      Universe.moonCenter.add(up.scale(groundR))
+    );
+    const inward = BABYLON.Vector3.Dot(player.velocity, up);
+    if (inward < 0) player.velocity.subtractInPlace(up.scale(inward));
+  }
+
+  // ── Move player in universe ──
+  Universe.playerPos.addInPlace(player.velocity.scale(dt));
+}
+
+// ═══════════════════════════════════════════════════════
+//  CAMERA ORIENTATION  (up = surface normal on surface)
+// ═══════════════════════════════════════════════════════
+function orientCamera() {
+  const blend = (1 - smoothstep(0, 350, player.altitude)) * 0.1;
+  if (blend < 0.001) return;
+
+  const up = player.surfaceNormal;
+  let fwd  = camera.getDirection(BABYLON.Axis.Z).clone();
+
+  // Project forward onto tangent plane
+  const d = BABYLON.Vector3.Dot(fwd, up);
+  fwd.subtractInPlace(up.scale(d));
+  if (fwd.lengthSquared() < 0.0001) {
+    fwd = BABYLON.Vector3.Cross(up, new BABYLON.Vector3(1,0,0.001)).normalize();
+  } else {
+    fwd.normalize();
+  }
+
+  const right  = BABYLON.Vector3.Cross(fwd, up).normalize();
+  const target = BABYLON.Quaternion.RotationQuaternionFromAxis(right, up, fwd);
+
+  if (!camera.rotationQuaternion) {
+    camera.rotationQuaternion = target.clone();
+  } else {
+    BABYLON.Quaternion.SlerpToRef(camera.rotationQuaternion, target, blend, camera.rotationQuaternion);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  SCENE REBASE  (move meshes so camera stays at origin)
+// ═══════════════════════════════════════════════════════
+function rebaseScene() {
+  rebaseQuadtree();
+
+  const baseRender = toRender(Universe.basePos);
+  baseBody.position.copyFrom(baseRender);
+  pad.position.copyFrom(baseRender.add(baseUp.scale(BASE_SIZE * 0.275 + 0.9)));
+  ant.position.copyFrom(baseRender.add(baseUp.scale(BASE_SIZE * 0.275 + BASE_SIZE * 0.4 + 0.9)));
+}
+
+// ═══════════════════════════════════════════════════════
+//  STATE MACHINE
+// ═══════════════════════════════════════════════════════
+function updateState() {
+  const alt  = player.altitude;
+  const prev = player.state;
+
+  player.state = alt < 8 ? STATE.SURFACE
+               : alt < ATMO_HEIGHT ? STATE.LOW_ORBIT
+               : STATE.SPACE;
+
+  if (player.state !== prev) {
+    const f = document.getElementById("flash");
+    f.classList.add("active");
+    setTimeout(()=>f.classList.remove("active"), 300);
+
+    scene.fogDensity = player.state === STATE.SPACE    ? 0
+                     : player.state === STATE.LOW_ORBIT ? 0.000018
+                     : 0.000055;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  HUD
+// ═══════════════════════════════════════════════════════
+const stateNames = {
+  [STATE.SURFACE]  :'SURFACE',
+  [STATE.LOW_ORBIT]:'LOW ORBIT',
+  [STATE.SPACE]    :'SPACE',
+};
+
+function updateHUD() {
+  const alt   = player.altitude;
+  const speed = player.velocity.length();
+
+  document.getElementById("stateLabel").textContent = stateNames[player.state];
+
+  document.getElementById("altVal").textContent =
+    alt < 1000 ? alt.toFixed(1)+" m" : (alt/1000).toFixed(2)+" km";
+
+  const altPct = Math.min(100, (Math.log1p(alt)/Math.log1p(SPACE_HEIGHT))*100);
+  document.getElementById("altFill").style.height = altPct+"%";
+
+  document.getElementById("spdVal").textContent = speed.toFixed(1)+" m/s";
+
+  const g = 1 - smoothstep(0, SPACE_HEIGHT, alt);
+  document.getElementById("gravFill").style.height = (g*100)+"%";
+  document.getElementById("gravVal").textContent = g.toFixed(2)+"g";
+
+  const n = player.surfaceNormal;
+  const lat = (Math.asin(Math.max(-1,Math.min(1,n.y)))*180/Math.PI).toFixed(1);
+  const lon = (Math.atan2(n.x,n.z)*180/Math.PI).toFixed(1);
+  document.getElementById("coordDisplay").textContent = `LAT ${lat}° LON ${lon}°`;
+
+  const v = player.velocity;
+  document.getElementById("velDisplay").textContent =
+    `VEL ${v.x.toFixed(1)} / ${v.y.toFixed(1)} / ${v.z.toFixed(1)}`;
+
+  if (new URLSearchParams(window.location.search).get("debug") === "1") {
+    const pc = activePatchCount();
+    document.getElementById("velDisplay").textContent += `   PATCHES ${pc}`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  MAIN LOOP
+// ═══════════════════════════════════════════════════════
+scene.onBeforeRenderObservable.add(() => {
+  const dt = Math.min(engine.getDeltaTime() * 0.001, 0.05);
+
+  physicsUpdate(dt);
+  updateState();
+  orientCamera();
+  updateQuadtree();
+  rebaseScene();
+
+  // Camera always at render origin
+  camera.position.set(0, 0, 0);
+
+  // Skybox tracks camera rotation only — stars stay at true infinity
+  if (camera.rotationQuaternion) {
+    skyNode.rotationQuaternion = camera.rotationQuaternion.clone();
+  } else {
+    skyNode.rotation.copyFrom(camera.rotation);
+  }
+  skyNode.position.set(0, 0, 0);
+
+  updateHUD();
+});
+
+
+// ═══════════════════════════════════════════════════════
+//  SPLASH SCREEN
+// ═══════════════════════════════════════════════════════
+let commanderName = 'COMMANDER';
+
+(function initSplash() {
+  // Generate decorative stars for splash background
+  const container = document.getElementById('splash-stars');
+  for (let i = 0; i < 200; i++) {
+    const s = document.createElement('div');
+    s.className = 'splash-star';
+    const size = 1 + Math.random() * 2;
+    const op   = 0.15 + Math.random() * 0.7;
+    s.style.cssText = [
+      `left:${Math.random()*100}%`,
+      `top:${Math.random()*100}%`,
+      `width:${size}px`,
+      `height:${size}px`,
+      `--d:${2 + Math.random()*4}s`,
+      `--delay:${Math.random()*4}s`,
+      `--op:${op}`,
+    ].join(';');
+    container.appendChild(s);
+  }
+
+  const input   = document.getElementById('commander-input');
+  const btn     = document.getElementById('splash-start');
+  const splash  = document.getElementById('splash');
+
+  input.addEventListener('input', () => {
+    btn.disabled = input.value.trim().length === 0;
+  });
+
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && input.value.trim().length > 0) startGame();
+  });
+
+  btn.addEventListener('click', startGame);
+
+  function startGame() {
+    commanderName = input.value.trim().toUpperCase() || 'COMMANDER';
+
+    // Update HUD with commander name
+    document.getElementById('dateStatus').textContent =
+      `01 JAN 3200 · CMDR ${commanderName}`;
+
+    // Fade out splash, reveal game
+    splash.classList.add('fade-out');
+    setTimeout(() => {
+      splash.style.display        = 'none';
+      document.getElementById('hud').style.display = 'block';
+      const cv = document.getElementById('renderCanvas');
+      cv.style.pointerEvents = 'auto';
+      // Show the click-to-lock hint and request pointer lock immediately
+      document.getElementById('clickHint').style.opacity = '0.5';
+      cv.requestPointerLock();
+    }, 800);
+  }
+})();
+
+engine.runRenderLoop(() => scene.render());
+window.addEventListener("resize", () => engine.resize());
+</script>
+</body>
+</html>
