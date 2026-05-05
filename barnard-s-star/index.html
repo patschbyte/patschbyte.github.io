@@ -179,7 +179,7 @@
   }
 
   #splash-label {
-    font-size: 16px; letter-spacing: 0.3em;
+    font-size: 10px; letter-spacing: 0.3em;
     color: #ff8800; opacity: 0.6;
     text-transform: uppercase;
   }
@@ -244,7 +244,7 @@
   #splash-version {
     position: absolute; bottom: 24px;
     font-size: 10px; letter-spacing: 0.2em;
-    color: rgba(255,136,0,0.7);
+    color: rgba(255,136,0,0.25);
     animation: fadeSlideUp 1s ease 1.2s both;
   }
 
@@ -273,7 +273,7 @@
       <button id="splash-start" disabled>LAUNCH</button>
     </div>
   </div>
-  <div id="splash-version">v0.1.0 &nbsp;·&nbsp; MADE BY PATSCHBYTE</div>
+  <div id="splash-version">v0.1.0 &nbsp;·&nbsp; BUILD 001</div>
 </div>
 
 <canvas id="renderCanvas"></canvas>
@@ -343,7 +343,7 @@ const Universe = {
   playerPos : new BABYLON.Vector3(0, MOON_RADIUS + PLAYER_HEIGHT, 0),
   moonCenter: new BABYLON.Vector3(0, 0, 0),
   // base lives at north pole surface
-  basePos   : new BABYLON.Vector3(0, MOON_RADIUS + BASE_SIZE * 0.3, 0),
+  basePos   : new BABYLON.Vector3(0, MOON_RADIUS + BASE_SIZE * 0.3, 0), // updated after terrain init
 };
 
 function toRender(universePos) {
@@ -601,10 +601,10 @@ moonMat.backFaceCulling     = false;
 
 // ── Constants ─────────────────────────────────────────
 const PATCH_VERTS  = 17;      // 16x16 quads per patch (power-of-2 + 1)
-const MAX_LOD      = 8;       // deepest split level
-const SPLIT_K      = 2.2;     // split when dist < K * patchWorldSize
-const MERGE_HYST   = 1.35;    // merge when dist > splitDist * MERGE_HYST
-const SKIRT_DROP   = 0;       // metres — skirts disabled; overlap strategy used instead
+const MAX_LOD      = 8;       // deepest split level — LOD8 = ~61m patch, ~3.8m verts
+const SPLIT_K      = 3.5;     // split when player dist < K * patchWorldSize
+const MERGE_HYST   = 1.5;     // merge when dist > splitDist * MERGE_HYST (hysteresis)
+const SKIRT_DROP   = 0;       // metres — overlap strategy used instead
 
 // Scratch Vector3 reused across all patch builds — zero allocation in hot path
 const _pv = new BABYLON.Vector3();
@@ -825,7 +825,7 @@ function _patchDist(patch) {
 }
 
 // Max mesh builds allowed per frame — prevents cascade stalls on approach
-const MAX_BUILDS_PER_FRAME = 2;
+const MAX_BUILDS_PER_FRAME = 3;  // max mesh builds per frame — limits cascade stalls
 let _buildsThisFrame = 0;
 
 function _splitPatch(patch) {
@@ -857,16 +857,30 @@ function _mergePatch(patch) {
   _buildsThisFrame++;
 }
 
+// LOD cap by flight state — no point splitting beyond what's visible
+function _lodCap() {
+  if (player.state === STATE.SPACE)      return 0;  // single patch per face in space
+  if (player.state === STATE.LOW_ORBIT)  return 4;  // ~1km patches in low orbit
+  return MAX_LOD;                                    // full detail at surface
+}
+
 function _updatePatchTree(patch) {
-  // Hard budget: never build more than MAX_BUILDS_PER_FRAME meshes in one tick
   if (_buildsThisFrame >= MAX_BUILDS_PER_FRAME) return;
 
-  const dist = _patchDist(patch);
+  const dist   = _patchDist(patch);
+  const lodCap = _lodCap();
 
   if (!patch.children) {
-    if (patch.lod < MAX_LOD && dist < _splitDist(patch.patchWorldSize)) {
+    // Split if close enough AND under the state LOD cap
+    if (patch.lod < lodCap && dist < _splitDist(patch.patchWorldSize)) {
       _splitPatch(patch);
     }
+    return;
+  }
+
+  // Force-merge children that are now above the LOD cap
+  if (patch.lod >= lodCap) {
+    _mergePatch(patch);
     return;
   }
 
@@ -911,7 +925,30 @@ for (let f = 0; f < 6; f++) {
   quadRoots.push(root);
 }
 
+// ── Anchor base to terrain at north pole ──────────────
+// North pole normal is (0,1,0). Sample the same terrainHeight
+// function the mesh uses so base never floats or sinks.
+(function anchorBase() {
+  const h = terrainHeight(0, 1, 0);
+  const r = MOON_RADIUS + h;
+  // basePos radial distance: surface + half base height so it sits ON terrain
+  Universe.basePos.set(0, r + BASE_SIZE * 0.275, 0);
+  // Also update player start position so they spawn just above the base
+  Universe.playerPos.set(0, r + BASE_SIZE * 0.55 + PLAYER_HEIGHT + 2, 0);
+})();
+
 // Public helpers used by game loop + HUD
+
+// -- Anchor base to terrain at north pole --
+// North pole normal is (0,1,0). Same terrainHeight function the mesh uses.
+(function anchorBase() {
+  const h = terrainHeight(0, 1, 0);
+  const r = MOON_RADIUS + h;
+  Universe.basePos.set(0, r + BASE_SIZE * 0.275, 0);
+  // Spawn player just above the pad
+  Universe.playerPos.set(0, r + BASE_SIZE * 0.55 + PLAYER_HEIGHT + 2, 0);
+})();
+
 function updateQuadtree() {
   _buildsThisFrame = 0;
   for (const r of quadRoots) _updatePatchTree(r);
@@ -1077,9 +1114,9 @@ const SUN_DIR = new BABYLON.Vector3(0.72, 0.35, -0.58).normalize();
 const SUN_SKY_POS = SUN_DIR.scale(SKY_R * 0.95);
 
 // ── Sun appearance — tweak these ──────────────────────
-const SUN_DISC_SIZE  = 7800;   // radius of the hard white disc (world units at SKY_R)
-const SUN_GLOW1_SIZE = 6800;   // inner glow ring
-const SUN_GLOW2_SIZE = 9000;   // outer corona haze
+const SUN_DISC_SIZE  = 1800;   // radius of the hard white disc (world units at SKY_R)
+const SUN_GLOW1_SIZE = 3800;   // inner glow ring
+const SUN_GLOW2_SIZE = 7000;   // outer corona haze
 const SUN_COLOR      = new BABYLON.Color3(1.0, 0.97, 0.88);   // disc colour
 const SUN_GLOW1_COL  = new BABYLON.Color3(0.55, 0.42, 0.12);  // inner glow tint
 const SUN_GLOW2_COL  = new BABYLON.Color3(0.30, 0.20, 0.06);  // outer haze tint
@@ -1378,8 +1415,9 @@ function updateHUD() {
     `VEL ${v.x.toFixed(1)} / ${v.y.toFixed(1)} / ${v.z.toFixed(1)}`;
 
   if (new URLSearchParams(window.location.search).get("debug") === "1") {
-    const pc = activePatchCount();
-    document.getElementById("velDisplay").textContent += `   PATCHES ${pc}`;
+    const pc  = activePatchCount();
+    const cap = _lodCap();
+    document.getElementById("velDisplay").textContent += `   PATCHES ${pc}  LOD-CAP ${cap}`;
   }
 }
 
