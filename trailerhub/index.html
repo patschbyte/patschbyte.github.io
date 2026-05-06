@@ -1,1 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrailerHub</title>
 
+<style>
+:root{--bg:#f5f5f5;--panel:#ffffff;--text:#111;--muted:#666;--accent:#e50914}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial, Helvetica, sans-serif;background:var(--bg);color:var(--text)}
+
+header{position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center;padding:14px 28px;background:#fff;border-bottom:1px solid #ddd}
+header h1{margin:0;color:var(--accent)}
+nav a{color:#333;margin-left:18px;text-decoration:none;font-weight:600}
+
+.container{display:grid;grid-template-columns:3fr 1fr;gap:18px;padding:10px 18px 24px}
+
+h2{margin:14px 0 10px 6px;font-size:20px}
+
+.row{position:relative}
+.row-inner{display:flex;gap:12px;overflow-x:auto;scroll-behavior:smooth;padding:6px 28px 6px 6px}
+.row-inner::-webkit-scrollbar{display:none}
+
+.card{min-width:160px;max-width:160px;height:240px;position:relative;border-radius:8px;overflow:hidden;background:#000;transition:.25s}
+.card img{width:100%;height:100%;object-fit:cover}
+.card:hover{transform:scale(1.1);z-index:5}
+.card .overlay{position:absolute;bottom:0;width:100%;padding:10px;background:linear-gradient(transparent, rgba(0,0,0,.8));opacity:0;color:#fff}
+.card:hover .overlay{opacity:1}
+
+.arrow{position:absolute;top:0;bottom:0;width:40px;display:flex;align-items:center;justify-content:center;background:linear-gradient(90deg,#f5f5f5,transparent);cursor:pointer;opacity:0}
+.row:hover .arrow{opacity:1}
+.arrow.right{right:0;background:linear-gradient(270deg,#f5f5f5,transparent)}
+
+.sidebar{background:var(--panel);padding:14px;border-radius:10px;border:1px solid #ddd}
+.sidebar h3{margin:6px 0 10px;border-bottom:1px solid #eee;padding-bottom:6px}
+.news-item{padding:10px 0;border-bottom:1px solid #eee}
+.news-item h4{margin:0;font-size:14px}
+.news-item p{margin:6px 0 0;font-size:12px;color:var(--muted)}
+
+.tv-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #eee;align-items:center}
+.tv-item img{width:50px;height:70px;object-fit:cover;border-radius:4px}
+.tv-info{display:flex;flex-direction:column}
+.tv-info strong{font-size:13px}
+.tv-info .meta{font-size:11px;color:var(--muted)}
+.tv-info .time{font-size:11px;color:#333;font-weight:600}
+
+.hero{height:40vh;border-radius:10px;overflow:hidden;margin:6px;position:relative;background:url('https://image.tmdb.org/t/p/original/5YZbUmjbMa3ClvSW1Wj3D6XGolb.jpg') center/cover}
+.hero::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(0,0,0,.7))}
+.hero-content{position:absolute;bottom:18px;left:18px;color:#fff}
+
+footer{padding:18px;text-align:center;color:#777;background:#fff;margin-top:16px;border-top:1px solid #ddd}
+@media(max-width:900px){.container{grid-template-columns:1fr}}
+
+/* ===== NEW FILTER UI ===== */
+
+.week-toggle{
+  display:flex;
+  gap:6px;
+  margin-bottom:10px;
+}
+
+.week-btn{
+  padding:6px 10px;
+  border-radius:18px;
+  background:#eee;
+  font-size:12px;
+  cursor:pointer;
+}
+
+.week-btn.active{
+  background:var(--accent);
+  color:#fff;
+}
+
+.network-filters{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+}
+
+.net{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:6px 10px;
+  border-radius:18px;
+  background:#eee;
+  cursor:pointer;
+  font-size:12px;
+  min-width:42px;
+  gap:6px;
+}
+
+.net img{
+  height:14px;
+  opacity:0.8;
+}
+
+.net.active{
+  background:#111;
+  color:#fff;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>TrailerHub</h1>
+  <nav>
+    <a href="#">Home</a>
+    <a href="#">Trailers</a>
+    <a href="#">Movies</a>
+    <a href="#">News</a>
+  </nav>
+</header>
+
+<div class="container">
+  <main>
+
+    <section class="hero">
+      <div class="hero-content">
+        <h2>Featured: Dune</h2>
+      </div>
+    </section>
+
+    <section class="row" data-row>
+      <h2>Trending Now</h2>
+      <div class="arrow left"><span>‹</span></div>
+      <div class="row-inner">
+        <div class="card"><img src="https://image.tmdb.org/t/p/w500/qNBAXBIQlnOThrVvA6mA2B5ggV6.jpg"><div class="overlay">Avengers</div></div>
+        <div class="card"><img src="https://image.tmdb.org/t/p/w500/8UlWHLMpgZm9bx6QYh0NFoq67TZ.jpg"><div class="overlay">Dark Knight</div></div>
+      </div>
+      <div class="arrow right"><span>›</span></div>
+    </section>
+
+  </main>
+
+  <aside class="sidebar">
+    <h3>Latest News</h3>
+    <div class="news-item"><h4>Marvel update</h4><p>New phase coming</p></div>
+
+    <h3>📺 TV Premieres</h3>
+
+    <!-- WEEK TOGGLE -->
+    <div class="week-toggle">
+      <div class="week-btn active" data-week="today">Today</div>
+      <div class="week-btn" data-week="tomorrow">Tomorrow</div>
+      <div class="week-btn" data-week="week">This Week</div>
+    </div>
+
+    <!-- NETWORK FILTERS -->
+    <div class="network-filters">
+      <div class="net active" data-net="all">📺 All</div>
+
+      <div class="net" data-net="Netflix">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg">
+      </div>
+
+      <div class="net" data-net="HBO">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/1/17/HBO_Max_Logo.svg">
+      </div>
+
+      <div class="net" data-net="Disney">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/3/3e/Disney%2B_logo.svg">
+      </div>
+    </div>
+
+    <div id="tv-list"></div>
+
+  </aside>
+</div>
+
+<footer>© 2026 TrailerHub</footer>
+
+<script>
+// DATA
+const tvData = {
+  "2026-05-06": [
+    {title:"Citadel", net:"Netflix", time:"8:00 PM", poster:"https://image.tmdb.org/t/p/w200/3IhGkkalwXguTlceGSl8XUJZOVI.jpg"},
+    {title:"House of the Dragon", net:"HBO", time:"9:00 PM", poster:"https://image.tmdb.org/t/p/w200/z2yahl2uefxDCl0nogcRBstwruJ.jpg"},
+    {title:"Star Wars: Ahsoka", net:"Disney", time:"7:00 PM", poster:"https://image.tmdb.org/t/p/w200/9zcbqSxdsRMZWHYtyCd1nXPr2xq.jpg"}
+  ],
+  "2026-05-07": [
+    {title:"The Witcher", net:"Netflix", time:"8:00 PM", poster:"https://image.tmdb.org/t/p/w200/7vjaCdMw15FEbXyLQTVa04URsPm.jpg"},
+    {title:"The Last of Us", net:"HBO", time:"9:00 PM", poster:"https://image.tmdb.org/t/p/w200/uKvVjHNqB5VmOrdxqAt2F7J78ED.jpg"}
+  ]
+};
+
+let selectedDate = "2026-05-06";
+let selectedNet = "all";
+let selectedWeek = "today";
+
+// NETWORK FILTERS
+document.querySelectorAll('.net').forEach(f=>{
+  f.onclick=()=>{
+    selectedNet=f.dataset.net;
+    document.querySelectorAll('.net').forEach(el=>el.classList.remove('active'));
+    f.classList.add('active');
+    render();
+  };
+});
+
+// WEEK TOGGLE
+document.querySelectorAll('.week-btn').forEach(b=>{
+  b.onclick=()=>{
+    selectedWeek=b.dataset.week;
+    document.querySelectorAll('.week-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    render();
+  };
+});
+
+// RENDER
+function render(){
+  const list=document.getElementById('tv-list');
+  list.innerHTML='';
+  const shows=tvData[selectedDate]||[];
+
+  shows
+    .filter(s=>selectedNet==='all'||s.net===selectedNet)
+    .forEach(s=>{
+      const div=document.createElement('div');
+      div.className='tv-item';
+      div.innerHTML=`
+        <img src="${s.poster}">
+        <div class="tv-info">
+          <strong>${s.title}</strong>
+          <div class="time">${s.time}</div>
+          <div class="meta">${s.net}</div>
+        </div>`;
+      list.appendChild(div);
+    });
+}
+
+render();
+
+// SLIDER
+document.querySelectorAll('[data-row]').forEach(row=>{
+ const inner=row.querySelector('.row-inner');
+ row.querySelector('.left').onclick=()=>inner.scrollBy({left:-400,behavior:'smooth'});
+ row.querySelector('.right').onclick=()=>inner.scrollBy({left:400,behavior:'smooth'});
+});
+</script>
+
+</body>
+</html>
