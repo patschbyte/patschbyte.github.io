@@ -270,7 +270,7 @@
     <div id="splash-form">
       <div id="splash-label">Enter Commander Name</div>
       <input id="commander-input" type="text" maxlength="20" placeholder="COMMANDER" autocomplete="off" spellcheck="false">
-      <button id="splash-start" disabled>LAUNCH</button>
+      <button id="splash-start">LAUNCH</button>
     </div>
   </div>
   <div id="splash-version">v0.1.0 &nbsp;·&nbsp; BUILD 001</div>
@@ -356,6 +356,9 @@ function toRender(universePos) {
 const canvas = document.getElementById("renderCanvas");
 const engine = new BABYLON.Engine(canvas, true, { antialias:true });
 const scene  = new BABYLON.Scene(engine);
+scene.skipPointerMovePicking = true;
+let gameStarted = false;
+scene.skipPointerMovePicking = true;
 scene.clearColor = new BABYLON.Color4(0,0,0,1);
 
 // Camera — we drive it fully ourselves
@@ -364,6 +367,7 @@ camera.minZ = 0.5;
 camera.maxZ = 120000;
 camera.fov  = 1.08;
 camera.attachControl(canvas, true);
+camera.inputs.attached.mouse.usePointerLock = true;
 camera.speed = 0;
 
 // Lighting
@@ -1114,9 +1118,9 @@ const SUN_DIR = new BABYLON.Vector3(0.72, 0.35, -0.58).normalize();
 const SUN_SKY_POS = SUN_DIR.scale(SKY_R * 0.95);
 
 // ── Sun appearance — tweak these ──────────────────────
-const SUN_DISC_SIZE  = 1800;   // radius of the hard white disc (world units at SKY_R)
-const SUN_GLOW1_SIZE = 3800;   // inner glow ring
-const SUN_GLOW2_SIZE = 7000;   // outer corona haze
+const SUN_DISC_SIZE  = 7800;   // radius of the hard white disc (world units at SKY_R)
+const SUN_GLOW1_SIZE = 5800;   // inner glow ring
+const SUN_GLOW2_SIZE = 12000;   // outer corona haze
 const SUN_COLOR      = new BABYLON.Color3(1.0, 0.97, 0.88);   // disc colour
 const SUN_GLOW1_COL  = new BABYLON.Color3(0.55, 0.42, 0.12);  // inner glow tint
 const SUN_GLOW2_COL  = new BABYLON.Color3(0.30, 0.20, 0.06);  // outer haze tint
@@ -1201,6 +1205,13 @@ planet.isPickable = false;
 // ═══════════════════════════════════════════════════════
 //  PLAYER STATE
 // ═══════════════════════════════════════════════════════
+// ── Elite-style freelook vars ──
+let yaw = 0, pitch = 0, roll = 0;
+let yawVel = 0, pitchVel = 0, rollVel = 0;
+const LOOK_SENS = 0.0022;
+const LOOK_INERTIA = 0.92;
+const ROLL_FORCE = 0.12;
+
 const player = {
   velocity     : new BABYLON.Vector3(0,0,0),
   surfaceNormal: new BABYLON.Vector3(0,1,0),
@@ -1227,6 +1238,17 @@ canvas.addEventListener("click", () => { if (!pointerLocked) canvas.requestPoint
 document.addEventListener("pointerlockchange", () => {
   pointerLocked = document.pointerLockElement === canvas;
   document.getElementById("clickHint").style.opacity = pointerLocked ? "0" : "0.5";
+});
+
+
+scene.onPointerObservable.add((e) => {
+  if (!gameStarted) return;
+  if (!pointerLocked) return;
+  const dx = e.event.movementX || 0;
+  const dy = e.event.movementY || 0;
+  yawVel   += dx * LOOK_SENS;
+  pitchVel += dy * LOOK_SENS;
+  rollVel  += -dx * LOOK_SENS * ROLL_FORCE;
 });
 
 // ═══════════════════════════════════════════════════════
@@ -1319,28 +1341,23 @@ function physicsUpdate(dt) {
 //  CAMERA ORIENTATION  (up = surface normal on surface)
 // ═══════════════════════════════════════════════════════
 function orientCamera() {
-  const blend = (1 - smoothstep(0, 350, player.altitude)) * 0.1;
-  if (blend < 0.001) return;
+  yawVel *= LOOK_INERTIA;
+  pitchVel *= LOOK_INERTIA;
+  rollVel *= LOOK_INERTIA;
 
-  const up = player.surfaceNormal;
-  let fwd  = camera.getDirection(BABYLON.Axis.Z).clone();
+  yaw   += yawVel;
+  pitch += pitchVel;
+  roll  += rollVel;
 
-  // Project forward onto tangent plane
-  const d = BABYLON.Vector3.Dot(fwd, up);
-  fwd.subtractInPlace(up.scale(d));
-  if (fwd.lengthSquared() < 0.0001) {
-    fwd = BABYLON.Vector3.Cross(up, new BABYLON.Vector3(1,0,0.001)).normalize();
-  } else {
-    fwd.normalize();
-  }
+  pitch = Math.max(-Math.PI/2, Math.min(Math.PI/2, pitch));
+  roll *= 0.985;
 
-  const right  = BABYLON.Vector3.Cross(fwd, up).normalize();
-  const target = BABYLON.Quaternion.RotationQuaternionFromAxis(right, up, fwd);
+  const q = BABYLON.Quaternion.RotationYawPitchRoll(yaw, pitch, roll);
 
   if (!camera.rotationQuaternion) {
-    camera.rotationQuaternion = target.clone();
+    camera.rotationQuaternion = q;
   } else {
-    BABYLON.Quaternion.SlerpToRef(camera.rotationQuaternion, target, blend, camera.rotationQuaternion);
+    camera.rotationQuaternion.copyFrom(q);
   }
 }
 
@@ -1477,8 +1494,16 @@ let commanderName = 'COMMANDER';
   const btn     = document.getElementById('splash-start');
   const splash  = document.getElementById('splash');
 
-  input.addEventListener('input', () => {
-    btn.disabled = input.value.trim().length === 0;
+  // Initialize button state
+  btn.disabled = input.value.trim().length === 0;
+
+  // Listen on multiple events to catch typing, paste, and autofill
+  ['input', 'keyup', 'change', 'paste'].forEach(function(evt) {
+    input.addEventListener(evt, function() {
+      setTimeout(function() {
+        btn.disabled = input.value.trim().length === 0;
+      }, 0);
+    });
   });
 
   input.addEventListener('keydown', e => {
@@ -1488,6 +1513,7 @@ let commanderName = 'COMMANDER';
   btn.addEventListener('click', startGame);
 
   function startGame() {
+    gameStarted = true;
     commanderName = input.value.trim().toUpperCase() || 'COMMANDER';
 
     // Update HUD with commander name
